@@ -5,16 +5,17 @@ class UserSwipeCards extends StatefulWidget {
   _UserSwipeCardsState createState() => _UserSwipeCardsState();
 }
 
-class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProviderStateMixin {
+class _UserSwipeCardsState extends State<UserSwipeCards>
+    with SingleTickerProviderStateMixin {
   int cardCount = 0;
   int expandedCardIndex = -1; // -1 means no card is expanded
   List<String> userNames = []; // Store user names
-  
+
   // Animation controller
   late AnimationController _animationController;
   late PageController _pageController;
   late Animation<double> _scaleAnimation;
-  
+
   @override
   void initState() {
     super.initState();
@@ -23,30 +24,26 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
+
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+    );
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
     _pageController.dispose();
     super.dispose();
   }
-  
+
   void _expandCard(int index) {
     setState(() {
       expandedCardIndex = index;
     });
     _animationController.forward(from: 0.0);
   }
-  
+
   void _collapseCard() {
     _animationController.reverse().then((_) {
       setState(() {
@@ -54,55 +51,86 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
       });
     });
   }
-  
+
   // Show dialog to input user name
   void _showNameInputDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
-    
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Enter User Name'),
-        content: TextField(
-          controller: nameController,
-          decoration: InputDecoration(
-            hintText: 'Enter name here',
-            border: OutlineInputBorder(),
+
+      builder:
+          (context) => AlertDialog(
+            title: Column(
+              children: [
+                SizedBox(height: 20),
+                Icon(Icons.people, size: 50),
+                SizedBox(height: 20),
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: 8.0,
+                    bottom: 8.0,
+                  ), // customize as needed
+                  child: Center(
+                    child: Text('Enter User Name', textAlign: TextAlign.center),
+                  ),
+                ),
+              ],
+            ),
+            content: Container(
+              width: MediaQuery.sizeOf(context).width,
+              height: 200,
+              child: TextField(
+                controller: nameController,
+                cursorColor: Colors.grey,
+                decoration: InputDecoration(
+                  hintText: 'Enter name here',
+                  border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.orange,
+                      width: 2,
+                    ), // Focused state
+                  ),
+                ),
+                autofocus: false,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Cancel', style: TextStyle(color: Colors.orange)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  if (name.isNotEmpty) {
+                    setState(() {
+                      userNames.add(name);
+                      cardCount += 1;
+                      _pageController.jumpToPage(cardCount);
+                    });
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _pageController.animateToPage(
+                        cardCount - 1,
+                        duration: Duration(milliseconds: 400),
+                        curve: Curves.easeInOut,
+                      );
+                    });
+
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text('Add User', style: TextStyle(color: Colors.orange)),
+              ),
+            ],
           ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              if (name.isNotEmpty) {
-                setState(() {
-                  userNames.add(name);
-                  cardCount += 1;
-                  _pageController.jumpToPage(cardCount);
-                });
-                
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _pageController.animateToPage(
-                    cardCount-1,
-                    duration: Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
-                  );
-                });
-                
-                Navigator.pop(context);
-              }
-            },
-            child: Text('Add User'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -117,19 +145,17 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
               SizedBox(height: 80), // Top spacing
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  "Users",
-                  style: TextStyle(fontSize: 28),
-                ),
+                child: Text("Users", style: TextStyle(fontSize: 28)),
               ),
               SizedBox(height: 10),
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
                   // Disable scrolling when a card is expanded
-                  physics: expandedCardIndex != -1 
-                      ? NeverScrollableScrollPhysics() 
-                      : AlwaysScrollableScrollPhysics(),
+                  physics:
+                      expandedCardIndex != -1
+                          ? NeverScrollableScrollPhysics()
+                          : AlwaysScrollableScrollPhysics(),
                   itemCount: cardCount + 1,
                   itemBuilder: (context, index) {
                     if (index == cardCount) {
@@ -138,7 +164,6 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                         child: GestureDetector(
                           onTap: () {
                             _showNameInputDialog(context);
-                          
                           },
                           child: Card(
                             color: Colors.green[100],
@@ -156,7 +181,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                               ),
                             ),
                           ),
-                        )
+                        ),
                       );
                     }
                     return Center(
@@ -180,8 +205,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  userNames.isNotEmpty && index < userNames.length 
-                                      ? userNames[index] 
+                                  userNames.isNotEmpty &&
+                                          index < userNames.length
+                                      ? userNames[index]
                                       : "Page ${index + 1}",
                                   style: TextStyle(fontSize: 32),
                                 ),
@@ -210,7 +236,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
               ),
             ],
           ),
-          
+
           // Expanded card overlay (conditionally shown)
           if (expandedCardIndex != -1)
             AnimatedBuilder(
@@ -218,7 +244,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
               builder: (context, child) {
                 return Positioned.fill(
                   child: Material(
-                    color: Colors.black.withOpacity(0.5 * _animationController.value),
+                    color: Colors.black.withOpacity(
+                      0.5 * _animationController.value,
+                    ),
                     child: InkWell(
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
@@ -248,8 +276,10 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                                   children: [
                                     // Header
                                     Text(
-                                      userNames.isNotEmpty && expandedCardIndex < userNames.length 
-                                          ? userNames[expandedCardIndex] 
+                                      userNames.isNotEmpty &&
+                                              expandedCardIndex <
+                                                  userNames.length
+                                          ? userNames[expandedCardIndex]
                                           : "Page ${expandedCardIndex + 1}",
                                       style: TextStyle(
                                         fontSize: 32,
@@ -257,7 +287,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                                       ),
                                     ),
                                     SizedBox(height: 20),
-                                    
+
                                     // Content area - currently blank
                                     Expanded(
                                       child: Container(
@@ -272,7 +302,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                                         ),
                                       ),
                                     ),
-                                    
+
                                     // Footer hint
                                     Opacity(
                                       opacity: _animationController.value,
@@ -295,7 +325,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                     ),
                   ),
                 );
-              }
+              },
             ),
         ],
       ),
