@@ -1,22 +1,6 @@
-// Transaction model to store expense data
+// utils/balance_calculator.dart - Helper class to calculate balances
+import '../models/transaction.dart';
 
-class Transaction {
-  final String payerId; // Who paid
-  final List<String> splitBetween; // Who needs to split
-  final double amount;
-  final String description;
-  final DateTime dateTime;
-
-  Transaction({
-    required this.payerId,
-    required this.splitBetween,
-    required this.amount,
-    this.description = '',
-    DateTime? dateTime,
-  }) : dateTime = dateTime ?? DateTime.now();
-}
-
-// Helper class to calculate balances
 class BalanceCalculator {
   static Map<String, Map<String, double>> calculateBalances(List<Transaction> transactions, List<String> users) {
     // Initialize the balance map (who owes whom)

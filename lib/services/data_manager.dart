@@ -1,6 +1,7 @@
+// services/data_manager.dart - Data persistence service
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'transaction.dart';
+import '../models/transaction.dart';
 
 class DataManager {
   // Keys for SharedPreferences
