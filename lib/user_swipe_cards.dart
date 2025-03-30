@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'user_details_full_screen.dart';
 import 'transaction.dart';
+import 'data_manager.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
@@ -40,6 +41,30 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
+
+    // Load saved data
+    _loadSavedData();
+  }
+
+  // Add this method to load saved data
+  void _loadSavedData() async {
+    try {
+      // Load users
+      final savedUsers = await DataManager.loadUsers();
+
+      // Load transactions
+      final savedTransactions = await DataManager.loadTransactions();
+
+      if (mounted) {
+        setState(() {
+          userNames = savedUsers;
+          transactions = savedTransactions;
+          cardCount = userNames.length;
+        });
+      }
+    } catch (e) {
+      print('Error loading saved data: $e');
+    }
   }
 
   @override
@@ -72,76 +97,79 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Column(
-              children: [
-                SizedBox(height: 20),
-                Icon(Icons.people, size: 50),
-                SizedBox(height: 20),
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: 8.0,
-                    bottom: 8.0,
-                  ), // customize as needed
-                  child: Center(
-                    child: Text('Enter User Name', textAlign: TextAlign.center),
-                  ),
-                ),
-              ],
-            ),
-            content: Container(
-              width: MediaQuery.sizeOf(context).width,
-              height: 200,
-              child: TextField(
-                controller: nameController,
-                cursorColor: Colors.grey,
-                decoration: InputDecoration(
-                  hintText: 'Enter name here',
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Colors.orange,
-                      width: 2,
-                    ), // Focused state
-                  ),
-                ),
-                autofocus: false,
+        title: Column(
+          children: [
+            SizedBox(height: 20),
+            Icon(Icons.people, size: 50),
+            SizedBox(height: 20),
+            Padding(
+              padding: EdgeInsets.only(
+                top: 8.0,
+                bottom: 8.0,
+              ), // customize as needed
+              child: Center(
+                child: Text('Enter User Name', textAlign: TextAlign.center),
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('Cancel', style: TextStyle(color: Colors.orange)),
+          ],
+        ),
+        content: Container(
+          width: MediaQuery.sizeOf(context).width,
+          height: 200,
+          child: TextField(
+            controller: nameController,
+            cursorColor: Colors.grey,
+            decoration: InputDecoration(
+              hintText: 'Enter name here',
+              border: OutlineInputBorder(),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  if (name.isNotEmpty) {
-                    setState(() {
-                      userNames.add(name);
-                      cardCount += 1;
-                      _pageController.jumpToPage(cardCount);
-                    });
-
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _pageController.animateToPage(
-                        cardCount - 1,
-                        duration: Duration(milliseconds: 400),
-                        curve: Curves.easeInOut,
-                      );
-                    });
-
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text('Add User', style: TextStyle(color: Colors.orange)),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Colors.orange,
+                  width: 2,
+                ), // Focused state
               ),
-            ],
+            ),
+            autofocus: false,
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel', style: TextStyle(color: Colors.orange)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  userNames.add(name);
+                  cardCount += 1;
+                  _pageController.jumpToPage(cardCount);
+                });
+
+                // Save updated users list
+                DataManager.saveUsers(userNames);
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _pageController.animateToPage(
+                    cardCount - 1,
+                    duration: Duration(milliseconds: 400),
+                    curve: Curves.easeInOut,
+                  );
+                });
+
+                Navigator.pop(context);
+              }
+            },
+            child: Text('Add User', style: TextStyle(color: Colors.orange)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -406,6 +434,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                 transactions.add(newTransaction);
                               });
 
+                              // Save updated transactions
+                              DataManager.saveTransactions(transactions);
+
                               // Show success message with calculated split
                               double perPersonAmount =
                                   amount / selectedSplitters.length;
@@ -453,17 +484,17 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
   Widget _buildBalanceDetails(String userName, int userIndex) {
     // Calculate balances for this user
     Map<String, Map<String, double>> balances =
-        BalanceCalculator.calculateBalances(transactions, userNames);
+    BalanceCalculator.calculateBalances(transactions, userNames);
 
     // Filter transactions related to this user
     List<Transaction> userTransactions =
-        transactions
-            .where(
-              (transaction) =>
-                  transaction.payerId == userName ||
-                  transaction.splitBetween.contains(userName),
-            )
-            .toList();
+    transactions
+        .where(
+          (transaction) =>
+      transaction.payerId == userName ||
+          transaction.splitBetween.contains(userName),
+    )
+        .toList();
 
     // Debug - print total transaction count
     print(
@@ -529,9 +560,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                       CircleAvatar(
                         radius: 14,
                         backgroundColor:
-                            youOwe
-                                ? Colors.red.shade100
-                                : Colors.green.shade100,
+                        youOwe
+                            ? Colors.red.shade100
+                            : Colors.green.shade100,
                         child: Icon(
                           youOwe ? Icons.arrow_upward : Icons.arrow_downward,
                           color: youOwe ? Colors.red : Colors.green,
@@ -582,8 +613,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
           ),
         ),
 
-        // Transaction history section remains the same
-        // Transaction history section remains the same
+        // Transaction history section
         Expanded(
           child: userTransactions.isEmpty
               ? Center(
@@ -694,7 +724,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
   Widget _buildUserCardContent(String userName, int index) {
     // Calculate balances for this user
     Map<String, Map<String, double>> balances =
-        BalanceCalculator.calculateBalances(transactions, userNames);
+    BalanceCalculator.calculateBalances(transactions, userNames);
 
     // For debugging
     print("Building main card for $userName with balances: $balances");
@@ -743,7 +773,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
           padding: EdgeInsets.only(top: 5, bottom: 0),
           child: SizedBox(
             height:
-                MediaQuery.of(context).size.height *
+            MediaQuery.of(context).size.height *
                 0.15, // 20% of screen height
             child: Stack(
               children: [
@@ -785,15 +815,15 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                   width: 280,
                   decoration: BoxDecoration(
                     color:
-                        isNetPositive
-                            ? Colors.red.shade50
-                            : Colors.green.shade50,
+                    isNetPositive
+                        ? Colors.red.shade50
+                        : Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color:
-                          isNetPositive
-                              ? Colors.red.shade200
-                              : Colors.green.shade200,
+                      isNetPositive
+                          ? Colors.red.shade200
+                          : Colors.green.shade200,
                       width: 1.5,
                     ),
                   ),
@@ -874,9 +904,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                           borderRadius: BorderRadius.circular(8),
                           side: BorderSide(
                             color:
-                                youOwe
-                                    ? Colors.red.shade300
-                                    : Colors.green.shade300,
+                            youOwe
+                                ? Colors.red.shade300
+                                : Colors.green.shade300,
                             width: 1.0,
                           ),
                         ),
@@ -887,9 +917,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                               CircleAvatar(
                                 radius: 14,
                                 backgroundColor:
-                                    youOwe
-                                        ? Colors.red.shade100
-                                        : Colors.green.shade100,
+                                youOwe
+                                    ? Colors.red.shade100
+                                    : Colors.green.shade100,
                                 child: Icon(
                                   youOwe
                                       ? Icons.arrow_upward
@@ -964,7 +994,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
     );
   }
 
-  // Show delete confirmation dialog
+  // Show delete confirmation dialog for transactions
   void _showDeleteConfirmationDialog(BuildContext context, Transaction transaction, int index) {
     showDialog(
       context: context,
@@ -979,7 +1009,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
         ),
         content: Text(
             "Are you sure you want to delete this transaction?\n\n" +
-                "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}" +
+                "${transaction.payerId} paid \${transaction.amount.toStringAsFixed(2)}" +
                 (transaction.description.isNotEmpty ? " for ${transaction.description}" : "")
         ),
         actions: [
@@ -999,6 +1029,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                 transactions.remove(transaction);
               });
 
+              // Save updated transactions
+              DataManager.saveTransactions(transactions);
+
               Navigator.pop(context);
 
               // Show confirmation
@@ -1013,6 +1046,151 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
             child: Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
+      ),
+    );
+  }
+
+  // Show delete user dialog
+  void _showDeleteUserDialog(BuildContext context, int userIndex) {
+    if (userIndex < 0 || userIndex >= userNames.length) return;
+
+    String userName = userNames[userIndex];
+    bool deleteTransactions = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Column(
+            children: [
+              SizedBox(height: 10),
+              Icon(Icons.person_remove, color: Colors.red, size: 40),
+              SizedBox(height: 10),
+              Text("Delete User"),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Are you sure you want to delete ${userName}?",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Checkbox(
+                    value: deleteTransactions,
+                    activeColor: Colors.red,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        deleteTransactions = value ?? false;
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: Text(
+                      "Also delete all transactions involving this user",
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              Text(
+                "This action cannot be undone.",
+                style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () async {
+                // Get the current user index to be removed
+                if (userIndex != -1) {
+                  // Create a copy of the userNames list without the deleted user
+                  final updatedUserNames = List<String>.from(userNames);
+                  updatedUserNames.removeAt(userIndex);
+
+                  // Handle the transactions based on user choice
+                  List<Transaction> updatedTransactions = List<Transaction>.from(transactions);
+
+                  if (deleteTransactions) {
+                    // Remove all transactions where this user is the payer or part of the split
+                    updatedTransactions = transactions.where((transaction) =>
+                    transaction.payerId != userName &&
+                        !transaction.splitBetween.contains(userName)
+                    ).toList();
+                  } else {
+                    // Keep transactions but remove the user from any splitBetween lists
+                    updatedTransactions = transactions.map((transaction) {
+                      if (transaction.payerId == userName) {
+                        // For transactions where the deleted user is the payer,
+                        // we could either delete them or reassign them.
+                        // Here, we'll keep them but mark them specially
+                        return Transaction(
+                          payerId: "[Deleted User]",
+                          splitBetween: transaction.splitBetween
+                              .where((user) => user != userName)
+                              .toList(),
+                          amount: transaction.amount,
+                          description: transaction.description,
+                          dateTime: transaction.dateTime,
+                        );
+                      } else {
+                        // For other transactions, just remove the user from splitBetween
+                        return Transaction(
+                          payerId: transaction.payerId,
+                          splitBetween: transaction.splitBetween
+                              .where((user) => user != userName)
+                              .toList(),
+                          amount: transaction.amount,
+                          description: transaction.description,
+                          dateTime: transaction.dateTime,
+                        );
+                      }
+                    }).toList();
+                  }
+
+                  // Save the updated data
+                  await DataManager.saveUsers(updatedUserNames);
+                  await DataManager.saveTransactions(updatedTransactions);
+
+                  // Close both the dialog and collapse the expanded card
+                  Navigator.pop(context); // Close dialog
+                  _collapseCard(); // Collapse expanded card
+
+                  // Update state
+                  setState(() {
+                    userNames = updatedUserNames;
+                    transactions = updatedTransactions;
+                    cardCount = userNames.length;
+                  });
+
+                  // Show confirmation
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('User deleted${deleteTransactions ? ' along with their transactions' : ''}'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                      )
+                  );
+                }
+              },
+              child: Text('Delete User', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1109,9 +1287,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                   controller: _pageController,
                   // Disable scrolling when a card is expanded
                   physics:
-                      expandedCardIndex != -1
-                          ? NeverScrollableScrollPhysics()
-                          : AlwaysScrollableScrollPhysics(),
+                  expandedCardIndex != -1
+                      ? NeverScrollableScrollPhysics()
+                      : AlwaysScrollableScrollPhysics(),
                   itemCount: cardCount + 1,
                   itemBuilder: (context, index) {
                     if (index == cardCount) {
@@ -1162,12 +1340,12 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                                       "Oswald",
                                                       fontSize: 50,
                                                       color:
-                                                          const Color.fromARGB(
-                                                            255,
-                                                            255,
-                                                            255,
-                                                            255,
-                                                          ),
+                                                      const Color.fromARGB(
+                                                        255,
+                                                        255,
+                                                        255,
+                                                        255,
+                                                      ),
                                                       textStyle: TextStyle(
                                                         letterSpacing: 2,
                                                         shadows: [
@@ -1177,9 +1355,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                                               2,
                                                             ), // X, Y position
                                                             blurRadius:
-                                                                4.0, // Softness of shadow
+                                                            4.0, // Softness of shadow
                                                             color:
-                                                                Colors.black45,
+                                                            Colors.black45,
                                                           ),
                                                         ],
                                                       ),
@@ -1234,9 +1412,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                                               2,
                                                             ), // X, Y position
                                                             blurRadius:
-                                                                4.0, // Softness of shadow
+                                                            4.0, // Softness of shadow
                                                             color:
-                                                                Colors.black45,
+                                                            Colors.black45,
                                                           ),
                                                         ],
                                                       ),
@@ -1370,33 +1548,33 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                 ),
                                 userNames.isNotEmpty && index < userNames.length
                                     ? _buildUserCardContent(
-                                      userNames[index],
-                                      index,
-                                    )
+                                  userNames[index],
+                                  index,
+                                )
                                     : Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "Page ${index + 1}",
-                                          style: TextStyle(fontSize: 32),
-                                        ),
-                                        SizedBox(height: 16),
-                                        Icon(
-                                          Icons.touch_app,
-                                          color: Colors.grey[600],
-                                          size: 40,
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          "Tap to expand",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Page ${index + 1}",
+                                      style: TextStyle(fontSize: 32),
                                     ),
+                                    SizedBox(height: 16),
+                                    Icon(
+                                      Icons.touch_app,
+                                      color: Colors.grey[600],
+                                      size: 40,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      "Tap to expand",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
@@ -1449,8 +1627,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                     // Header
                                     Text(
                                       userNames.isNotEmpty &&
-                                              expandedCardIndex <
-                                                  userNames.length
+                                          expandedCardIndex <
+                                              userNames.length
                                           ? userNames[expandedCardIndex]
                                           : "Page ${expandedCardIndex + 1}",
                                       style: TextStyle(
@@ -1464,18 +1642,35 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                     // Content area - Show balance details directly
                                     Expanded(
                                       child:
-                                          userNames.isNotEmpty &&
-                                                  expandedCardIndex <
-                                                      userNames.length
-                                              ? _buildBalanceDetails(
-                                                userNames[expandedCardIndex],
-                                                expandedCardIndex,
-                                              )
-                                              : Center(
-                                                child: Text(
-                                                  "No data available",
-                                                ),
-                                              ),
+                                      userNames.isNotEmpty &&
+                                          expandedCardIndex <
+                                              userNames.length
+                                          ? _buildBalanceDetails(
+                                        userNames[expandedCardIndex],
+                                        expandedCardIndex,
+                                      )
+                                          : Center(
+                                        child: Text(
+                                          "No data available",
+                                        ),
+                                      ),
+                                    ),
+
+                                    // Add Delete User button
+                                    SizedBox(height: 16),
+                                    ElevatedButton.icon(
+                                      icon: Icon(Icons.person_remove_outlined, color: Colors.white),
+                                      label: Text("Delete User", style: TextStyle(color: Colors.white)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        _showDeleteUserDialog(context, expandedCardIndex);
+                                      },
                                     ),
 
                                     // Footer hint
