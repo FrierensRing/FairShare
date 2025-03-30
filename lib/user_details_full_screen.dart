@@ -22,6 +22,13 @@ class UserDetailsFullScreen extends StatelessWidget {
     Map<String, Map<String, double>> balances =
     BalanceCalculator.calculateBalances(transactions, userNames);
 
+    // Filter transactions related to this user
+    List<Transaction> userTransactions = transactions.where((transaction) =>
+    transaction.payerId == userName || transaction.splitBetween.contains(userName)
+    ).toList();
+
+    print("Displaying ${userTransactions.length} transactions for $userName");
+
     return Scaffold(
       appBar: AppBar(
         title: Text("${userName}'s Balance"),
@@ -41,147 +48,156 @@ class UserDetailsFullScreen extends StatelessWidget {
             ),
           ),
 
-          // User Owes Others
+          // Single Expanded widget containing both sections
           Expanded(
-            child: ListView.builder(
-              itemCount: userNames.length,
-              itemBuilder: (context, i) {
-                if (i == index) return SizedBox.shrink(); // Skip self
+            child: Column(
+              children: [
+                // Balance section - takes 50% of space
+                Expanded(
+                  flex: 1,
+                  child: ListView.builder(
+                    itemCount: userNames.length,
+                    itemBuilder: (context, i) {
+                      if (i == index) return SizedBox.shrink(); // Skip self
 
-                String otherUser = userNames[i];
-                double amount = balances[userName]?[otherUser] ?? 0;
-                bool isPositive = amount > 0;
+                      String otherUser = userNames[i];
+                      double amount = balances[userName]?[otherUser] ?? 0;
+                      bool isPositive = amount > 0;
 
-                // Only show entries where there's a balance
-                if (amount == 0) return SizedBox.shrink();
+                      // Only show entries where there's a balance
+                      if (amount == 0) return SizedBox.shrink();
 
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: isPositive ? Colors.red.shade300 : Colors.green.shade300,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: isPositive ? Colors.red.shade100 : Colors.green.shade100,
-                          child: Icon(
-                            isPositive
-                                ? Icons.arrow_upward
-                                : Icons.arrow_downward,
-                            color: isPositive ? Colors.red : Colors.green,
+                      return Card(
+                        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isPositive ? Colors.red.shade300 : Colors.green.shade300,
+                            width: 1.5,
                           ),
                         ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
                             children: [
-                              Text(
-                                isPositive
-                                    ? "You owe ${otherUser}"
-                                    : "${otherUser} owes you",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                              CircleAvatar(
+                                backgroundColor: isPositive ? Colors.red.shade100 : Colors.green.shade100,
+                                child: Icon(
+                                  isPositive
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward,
+                                  color: isPositive ? Colors.red : Colors.green,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isPositive
+                                          ? "You owe ${otherUser}"
+                                          : "${otherUser} owes you",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      isPositive
+                                          ? "You need to pay ${otherUser}"
+                                          : "You need to receive from ${otherUser}",
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               Text(
-                                isPositive
-                                    ? "You need to pay ${otherUser}"
-                                    : "You need to receive from ${otherUser}",
+                                "\$${amount.abs().toStringAsFixed(2)}",
                                 style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: isPositive ? Colors.red : Colors.green,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Text(
-                          "\$${amount.abs().toStringAsFixed(2)}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: isPositive ? Colors.red : Colors.green,
+                      );
+                    },
+                  ),
+                ),
+
+                // Transaction history header
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    "Transaction History",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // Transaction history section - takes 50% of space
+                Expanded(
+                  flex: 1,
+                  child: userTransactions.isEmpty
+                      ? Center(
+                    child: Text(
+                      "No transactions yet",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                      : ListView.builder(
+                    itemCount: userTransactions.length,
+                    itemBuilder: (context, i) {
+                      Transaction transaction = userTransactions[i];
+                      bool isPayer = transaction.payerId == userName;
+
+                      // Debug print to verify transaction building
+                      print("Building transaction card $i for ${transaction.payerId} amount: ${transaction.amount}");
+
+                      return Card(
+                        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        elevation: 2,
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: isPayer ? Colors.blue.shade100 : Colors.amber.shade100,
+                            child: Icon(
+                              isPayer ? Icons.payments : Icons.account_balance_wallet,
+                              color: isPayer ? Colors.blue : Colors.amber,
+                            ),
+                          ),
+                          title: Text(
+                            isPayer
+                                ? "You paid \$${transaction.amount.toStringAsFixed(2)}"
+                                : "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}",
+                          ),
+                          subtitle: Text(
+                            "Split between: ${transaction.splitBetween.join(', ')}",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Text(
+                            "${transaction.dateTime.day}/${transaction.dateTime.month}/${transaction.dateTime.year}",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ),
-
-          // Transaction history section
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              "Transaction History",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          Expanded(
-            child: transactions.isEmpty
-                ? Center(
-              child: Text(
-                "No transactions yet",
-                style: TextStyle(color: Colors.grey),
-              ),
-            )
-                : ListView.builder(
-              itemCount: transactions.length,
-              itemBuilder: (context, i) {
-                Transaction transaction = transactions[i];
-                bool isPayer = transaction.payerId == userName;
-                bool isRecipient = transaction.splitBetween.contains(userName);
-
-                // Skip transactions not related to this user
-                if (!isPayer && !isRecipient) return SizedBox.shrink();
-
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 2,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: isPayer ? Colors.blue.shade100 : Colors.amber.shade100,
-                      child: Icon(
-                        isPayer ? Icons.payments : Icons.account_balance_wallet,
-                        color: isPayer ? Colors.blue : Colors.amber,
-                      ),
-                    ),
-                    title: Text(
-                      isPayer
-                          ? "You paid \$${transaction.amount.toStringAsFixed(2)}"
-                          : "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}",
-                    ),
-                    subtitle: Text(
-                      "Split between: ${transaction.splitBetween.join(', ')}",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: Text(
-                      "${transaction.dateTime.day}/${transaction.dateTime.month}/${transaction.dateTime.year}",
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ],
