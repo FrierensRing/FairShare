@@ -8,6 +8,7 @@ class UserSwipeCards extends StatefulWidget {
 class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProviderStateMixin {
   int cardCount = 0;
   int expandedCardIndex = -1; // -1 means no card is expanded
+  List<String> userNames = []; // Store user names
   
   // Animation controller
   late AnimationController _animationController;
@@ -53,6 +54,57 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
       });
     });
   }
+  
+  // Show dialog to input user name
+  void _showNameInputDialog(BuildContext context) {
+    final TextEditingController nameController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Enter User Name'),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(
+            hintText: 'Enter name here',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  userNames.add(name);
+                  cardCount += 1;
+                  _pageController.jumpToPage(cardCount);
+                });
+                
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _pageController.animateToPage(
+                    cardCount-1,
+                    duration: Duration(milliseconds: 400),
+                    curve: Curves.easeInOut,
+                  );
+                });
+                
+                Navigator.pop(context);
+              }
+            },
+            child: Text('Add User'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,17 +137,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                       return Center(
                         child: GestureDetector(
                           onTap: () {
-                            setState(() {
-                              cardCount += 1;
-                               _pageController.jumpToPage(cardCount);
-                            });
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              _pageController.animateToPage(
-                                cardCount-1,
-                                duration: Duration(milliseconds: 400),
-                                curve: Curves.easeInOut,
-                              );
-                            });
+                            _showNameInputDialog(context);
+                          
                           },
                           child: Card(
                             color: Colors.green[100],
@@ -137,7 +180,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  "Page ${index + 1}",
+                                  userNames.isNotEmpty && index < userNames.length 
+                                      ? userNames[index] 
+                                      : "Page ${index + 1}",
                                   style: TextStyle(fontSize: 32),
                                 ),
                                 SizedBox(height: 16),
@@ -203,7 +248,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards> with SingleTickerProvid
                                   children: [
                                     // Header
                                     Text(
-                                      "Page ${expandedCardIndex + 1}",
+                                      userNames.isNotEmpty && expandedCardIndex < userNames.length 
+                                          ? userNames[expandedCardIndex] 
+                                          : "Page ${expandedCardIndex + 1}",
                                       style: TextStyle(
                                         fontSize: 32,
                                         fontWeight: FontWeight.bold,
