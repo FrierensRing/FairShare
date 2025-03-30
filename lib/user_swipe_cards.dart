@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'user_details_full_screen.dart';
 import 'transaction.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/services.dart';
 
 class UserSwipeCards extends StatefulWidget {
   @override
@@ -20,9 +22,15 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
   late PageController _pageController;
   late Animation<double> _scaleAnimation;
 
+  void _unfocus() {
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+        overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
     _pageController = PageController();
     _animationController = AnimationController(
       vsync: this,
@@ -138,6 +146,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
   }
 
   // Show dialog to record a transaction
+  // Replace the transaction dialog with this improved version
   void _showTransactionDialog(BuildContext context) {
     if (userNames.isEmpty) {
       ScaffoldMessenger.of(
@@ -156,40 +165,60 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
     final TextEditingController amountController = TextEditingController();
     final TextEditingController descriptionController = TextEditingController();
 
+    // Get the screen size to calculate appropriate dialog height
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+
     showDialog(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder:
-                (context, setState) => AlertDialog(
-                  title: Column(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          // Use Dialog instead of AlertDialog for more control
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: Container(
+            // Set a maximum height to ensure it fits on screen with keyboard
+            constraints: BoxConstraints(
+              maxHeight: screenHeight * 0.7,  // 70% of screen height max
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Take only needed space
+              children: [
+                // Header - Always visible
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
+                    ),
+                  ),
+                  child: Column(
                     children: [
-                      SizedBox(height: 20),
-                      Icon(Icons.receipt_long, size: 50),
-                      SizedBox(height: 20),
-                      Padding(
-                        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-                        child: Center(
-                          child: Text(
-                            'Record Transaction',
-                            textAlign: TextAlign.center,
-                          ),
+                      Icon(Icons.receipt_long, size: 40, color: Colors.amber),
+                      SizedBox(height: 8),
+                      Text(
+                        'Record Transaction',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                  content: SingleChildScrollView(
-                    // Changed to SingleChildScrollView to handle overflow
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
+                ),
+
+                // Scrollable content
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize:
-                            MainAxisSize
-                                .min, // Allow container to size to content
                         children: [
                           // Description field
-                          // Description field with 15 character limit
                           Text(
                             'Description (optional):',
                             style: TextStyle(fontWeight: FontWeight.bold),
@@ -240,15 +269,14 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                   });
                                 }
                               },
-                              items:
-                                  userNames.map<DropdownMenuItem<String>>((
-                                    String user,
+                              items: userNames.map<DropdownMenuItem<String>>((
+                                  String user,
                                   ) {
-                                    return DropdownMenuItem<String>(
-                                      value: user,
-                                      child: Text(user),
-                                    );
-                                  }).toList(),
+                                return DropdownMenuItem<String>(
+                                  value: user,
+                                  child: Text(user),
+                                );
+                              }).toList(),
                             ),
                           ),
                           SizedBox(height: 15),
@@ -260,14 +288,13 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                           ),
                           SizedBox(height: 5),
                           Container(
-                            height: 100, // Fixed height for better visibility
+                            height: 120, // Fixed height for better visibility
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: ListView.builder(
-                              shrinkWrap:
-                                  true, // Added to ensure proper sizing inside scroll view
+                              shrinkWrap: true,
                               itemCount: userNames.length,
                               itemBuilder: (context, index) {
                                 final user = userNames[index];
@@ -283,6 +310,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                           value ?? false;
                                     });
                                   },
+                                  dense: true, // More compact layout
                                 );
                               },
                             ),
@@ -316,87 +344,108 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                               prefixIcon: Icon(Icons.attach_money),
                             ),
                           ),
+                          SizedBox(height: 24),
                         ],
                       ),
                     ),
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(color: Colors.orange),
-                      ),
+                ),
+
+                // Action buttons - Always at the bottom
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(15),
+                      bottomRight: Radius.circular(15),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Get list of selected users for splitting
-                        List<String> selectedSplitters =
-                            selectedSplittersMap.entries
-                                .where((entry) => entry.value)
-                                .map((entry) => entry.key)
-                                .toList();
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.orange),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                        ),
+                        onPressed: () {
+                          // Get list of selected users for splitting
+                          List<String> selectedSplitters =
+                          selectedSplittersMap.entries
+                              .where((entry) => entry.value)
+                              .map((entry) => entry.key)
+                              .toList();
 
-                        if (selectedPayer != null &&
-                            selectedSplitters.isNotEmpty &&
-                            amountController.text.isNotEmpty) {
-                          try {
-                            double amount = double.parse(amountController.text);
+                          if (selectedPayer != null &&
+                              selectedSplitters.isNotEmpty &&
+                              amountController.text.isNotEmpty) {
+                            try {
+                              double amount = double.parse(amountController.text);
 
-                            // Create the transaction
-                            Transaction newTransaction = Transaction(
-                              payerId: selectedPayer!,
-                              splitBetween: List.from(selectedSplitters),
-                              amount: amount,
-                              description: descriptionController.text.trim(),
-                            );
+                              // Create the transaction
+                              Transaction newTransaction = Transaction(
+                                payerId: selectedPayer!,
+                                splitBetween: List.from(selectedSplitters),
+                                amount: amount,
+                                description: descriptionController.text.trim(),
+                              );
 
-                            // The issue might be that we're using the StatefulBuilder's setState
-                            // Use the parent widget's setState to properly update the transactions list
-                            Navigator.pop(context);
+                              // Update state in the parent widget
+                              Navigator.pop(context);
+                              setState(() {
+                                transactions.add(newTransaction);
+                              });
 
-                            // Update state in the parent widget
-                            setState(() {
-                              transactions.add(newTransaction);
-                            });
-
-                            // Show success message with calculated split
-                            double perPersonAmount =
-                                amount / selectedSplitters.length;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Transaction recorded: ${selectedPayer} paid \$${amount.toStringAsFixed(2)}. ' +
-                                      'Each person owes \$${perPersonAmount.toStringAsFixed(2)}',
+                              // Show success message with calculated split
+                              double perPersonAmount =
+                                  amount / selectedSplitters.length;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Transaction recorded: ${selectedPayer} paid \$${amount.toStringAsFixed(2)}. ' +
+                                        'Each person owes \$${perPersonAmount.toStringAsFixed(2)}',
+                                  ),
+                                  duration: Duration(seconds: 4),
                                 ),
-                                duration: Duration(seconds: 4),
-                              ),
-                            );
-                          } catch (e) {
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Please enter a valid amount'),
+                                ),
+                              );
+                            }
+                          } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Please enter a valid amount'),
+                                content: Text('Please fill all required fields'),
                               ),
                             );
                           }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Please fill all required fields'),
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        'Save',
-                        style: TextStyle(color: Colors.orange),
+                        },
+                        child: Text(
+                          'Save',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+              ],
+            ),
           ),
+        ),
+      ),
     );
   }
 
@@ -534,100 +583,108 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
         ),
 
         // Transaction history section remains the same
+        // Transaction history section remains the same
         Expanded(
-          child:
-              userTransactions.isEmpty
-                  ? Center(
-                    child: Text(
-                      "No transactions yet",
-                      style: TextStyle(color: Colors.grey),
+          child: userTransactions.isEmpty
+              ? Center(
+            child: Text(
+              "No transactions yet",
+              style: TextStyle(color: Colors.grey),
+            ),
+          )
+              : ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: userTransactions.length,
+            itemBuilder: (context, i) {
+              // Debug - print transaction index being built
+              print(
+                "Building transaction $i of ${userTransactions.length}",
+              );
+
+              Transaction transaction = userTransactions[i];
+              bool isPayer = transaction.payerId == userName;
+              bool isRecipient = transaction.splitBetween.contains(
+                userName,
+              );
+
+              // Debug information
+              print(
+                "Transaction $i: isPayer=$isPayer, isRecipient=$isRecipient",
+              );
+
+              return Card(
+                margin: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                elevation: 2,
+                child: InkWell(
+                  onTap: () {
+                    _showDeleteConfirmationDialog(context, transaction, i);
+                  },
+                  child: ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                  )
-                  : ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: userTransactions.length,
-                    itemBuilder: (context, i) {
-                      // Debug - print transaction index being built
-                      print(
-                        "Building transaction $i of ${userTransactions.length}",
-                      );
-
-                      Transaction transaction = userTransactions[i];
-                      bool isPayer = transaction.payerId == userName;
-                      bool isRecipient = transaction.splitBetween.contains(
-                        userName,
-                      );
-
-                      // Debug information
-                      print(
-                        "Transaction $i: isPayer=$isPayer, isRecipient=$isRecipient",
-                      );
-
-                      return Card(
-                        margin: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                    leading: Container(
+                      width: 25, // Same as CircleAvatar's diameter (radius * 2)
+                      height: 25,
+                      padding: EdgeInsets.symmetric(horizontal: 3),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        isPayer
+                            ? Icons.payment
+                            : Icons.account_balance_wallet_outlined,
+                        size: 30,
+                        color: isPayer ? Colors.blue : Colors.amber,
+                      ),
+                    ),
+                    title: Text(
+                      isPayer
+                          ? "You paid \$${transaction.amount.toStringAsFixed(2)}"
+                          : "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}",
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Split: ${transaction.splitBetween.join(', ')}",
+                          style: TextStyle(fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        elevation: 2,
-                        child: ListTile(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                        if (transaction.description.isNotEmpty)
+                          Text(
+                            "For: ${transaction.description}",
+                            style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          leading: Container(
-                            width: 25,
-                            // Same as CircleAvatar's diameter (radius * 2)
-                            height: 25,
-                            padding: EdgeInsets.symmetric(horizontal: 3),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              isPayer
-                                  ? Icons.payment
-                                  : Icons.account_balance_wallet_outlined,
-                              size: 30,
-                              color: isPayer ? Colors.blue : Colors.amber,
-                            ),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "${transaction.dateTime.day}/${transaction.dateTime.month}/${transaction.dateTime.year}",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 10,
                           ),
-                          title: Text(
-                            isPayer
-                                ? "You paid \$${transaction.amount
-                                .toStringAsFixed(2)}"
-                                : "${transaction.payerId} paid \$${transaction
-                                .amount.toStringAsFixed(2)}",
-                            style: TextStyle(fontSize: 15),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Split: ${transaction.splitBetween.join(', ')}",
-                                style: TextStyle(fontSize: 13),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (transaction.description.isNotEmpty)
-                                Text(
-                                  "For: ${transaction.description}",
-                                  style: TextStyle(fontSize: 13,
-                                      fontStyle: FontStyle.italic),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                          trailing: Text(
-                            "${transaction.dateTime.day}/${transaction.dateTime
-                                .month}/${transaction.dateTime.year}",
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 10,
-                            ),
-                          ),
-                          isThreeLine: transaction.description.isNotEmpty,
                         ),
-                      );
-                    }),
+                        SizedBox(width: 4),
+                        Icon(Icons.delete_outline, color: Colors.red.shade300, size: 16),
+                      ],
+                    ),
+                    isThreeLine: transaction.description.isNotEmpty,
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -904,6 +961,59 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
           ),
         ),
       ],
+    );
+  }
+
+  // Show delete confirmation dialog
+  void _showDeleteConfirmationDialog(BuildContext context, Transaction transaction, int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Column(
+          children: [
+            SizedBox(height: 10),
+            Icon(Icons.delete, color: Colors.red, size: 40),
+            SizedBox(height: 10),
+            Text("Delete Transaction"),
+          ],
+        ),
+        content: Text(
+            "Are you sure you want to delete this transaction?\n\n" +
+                "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}" +
+                (transaction.description.isNotEmpty ? " for ${transaction.description}" : "")
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () {
+              // Delete the transaction
+              setState(() {
+                transactions.remove(transaction);
+              });
+
+              Navigator.pop(context);
+
+              // Show confirmation
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Transaction deleted'),
+                    backgroundColor: Colors.red,
+                    duration: Duration(seconds: 2),
+                  )
+              );
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 
