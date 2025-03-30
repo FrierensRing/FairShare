@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'user_details_full_screen.dart';
 import 'transaction.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class UserSwipeCards extends StatefulWidget {
   @override
@@ -61,86 +62,87 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Column(
-          children: [
-            SizedBox(height: 20),
-            Icon(Icons.people, size: 50),
-            SizedBox(height: 20),
-            Padding(
-              padding: EdgeInsets.only(
-                top: 8.0,
-                bottom: 8.0,
-              ), // customize as needed
-              child: Center(
-                child: Text('Enter User Name', textAlign: TextAlign.center),
+      builder:
+          (context) => AlertDialog(
+            title: Column(
+              children: [
+                SizedBox(height: 20),
+                Icon(Icons.people, size: 50),
+                SizedBox(height: 20),
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: 8.0,
+                    bottom: 8.0,
+                  ), // customize as needed
+                  child: Center(
+                    child: Text('Enter User Name', textAlign: TextAlign.center),
+                  ),
+                ),
+              ],
+            ),
+            content: Container(
+              width: MediaQuery.sizeOf(context).width,
+              height: 200,
+              child: TextField(
+                controller: nameController,
+                cursorColor: Colors.grey,
+                decoration: InputDecoration(
+                  hintText: 'Enter name here',
+                  border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.orange,
+                      width: 2,
+                    ), // Focused state
+                  ),
+                ),
+                autofocus: false,
               ),
             ),
-          ],
-        ),
-        content: Container(
-          width: MediaQuery.sizeOf(context).width,
-          height: 200,
-          child: TextField(
-            controller: nameController,
-            cursorColor: Colors.grey,
-            decoration: InputDecoration(
-              hintText: 'Enter name here',
-              border: OutlineInputBorder(),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Cancel', style: TextStyle(color: Colors.orange)),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Colors.orange,
-                  width: 2,
-                ), // Focused state
+              ElevatedButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  if (name.isNotEmpty) {
+                    setState(() {
+                      userNames.add(name);
+                      cardCount += 1;
+                      _pageController.jumpToPage(cardCount);
+                    });
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _pageController.animateToPage(
+                        cardCount - 1,
+                        duration: Duration(milliseconds: 400),
+                        curve: Curves.easeInOut,
+                      );
+                    });
+
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text('Add User', style: TextStyle(color: Colors.orange)),
               ),
-            ),
-            autofocus: false,
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Cancel', style: TextStyle(color: Colors.orange)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              if (name.isNotEmpty) {
-                setState(() {
-                  userNames.add(name);
-                  cardCount += 1;
-                  _pageController.jumpToPage(cardCount);
-                });
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _pageController.animateToPage(
-                    cardCount - 1,
-                    duration: Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
-                  );
-                });
-
-                Navigator.pop(context);
-              }
-            },
-            child: Text('Add User', style: TextStyle(color: Colors.orange)),
-          ),
-        ],
-      ),
     );
   }
 
   // Show dialog to record a transaction
   void _showTransactionDialog(BuildContext context) {
     if (userNames.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please add users first')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please add users first')));
       return;
     }
 
@@ -156,196 +158,242 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Column(
-            children: [
-              SizedBox(height: 20),
-              Icon(Icons.receipt_long, size: 50),
-              SizedBox(height: 20),
-              Padding(
-                padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-                child: Center(
-                  child: Text('Record Transaction', textAlign: TextAlign.center),
-                ),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(  // Changed to SingleChildScrollView to handle overflow
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,  // Allow container to size to content
-                children: [
-                  // Description field
-                  Text('Description (optional):', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 5),
-                  TextField(
-                    controller: descriptionController,
-                    cursorColor: Colors.grey,
-                    decoration: InputDecoration(
-                      hintText: 'E.g., Dinner, Movie tickets, etc.',
-                      border: OutlineInputBorder(),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Column(
+                    children: [
+                      SizedBox(height: 20),
+                      Icon(Icons.receipt_long, size: 50),
+                      SizedBox(height: 20),
+                      Padding(
+                        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                        child: Center(
+                          child: Text(
+                            'Record Transaction',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.orange, width: 2),
+                    ],
+                  ),
+                  content: SingleChildScrollView(
+                    // Changed to SingleChildScrollView to handle overflow
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize:
+                            MainAxisSize
+                                .min, // Allow container to size to content
+                        children: [
+                          // Description field
+                          Text(
+                            'Description (optional):',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          TextField(
+                            controller: descriptionController,
+                            cursorColor: Colors.grey,
+                            decoration: InputDecoration(
+                              hintText: 'E.g., Dinner, Movie tickets, etc.',
+                              border: OutlineInputBorder(),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.orange,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+
+                          // Who paid dropdown
+                          Text(
+                            'Who paid?',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: DropdownButton<String>(
+                              value: selectedPayer,
+                              isExpanded: true,
+                              underline: SizedBox(),
+                              onChanged: (String? value) {
+                                if (value != null) {
+                                  setState(() {
+                                    selectedPayer = value;
+                                  });
+                                }
+                              },
+                              items:
+                                  userNames.map<DropdownMenuItem<String>>((
+                                    String user,
+                                  ) {
+                                    return DropdownMenuItem<String>(
+                                      value: user,
+                                      child: Text(user),
+                                    );
+                                  }).toList(),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+
+                          // Who should split
+                          Text(
+                            'Split between:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          Container(
+                            height: 100, // Fixed height for better visibility
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: ListView.builder(
+                              shrinkWrap:
+                                  true, // Added to ensure proper sizing inside scroll view
+                              itemCount: userNames.length,
+                              itemBuilder: (context, index) {
+                                final user = userNames[index];
+                                final isSelected =
+                                    selectedSplittersMap[user] ?? false;
+
+                                return CheckboxListTile(
+                                  title: Text(user),
+                                  value: isSelected,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      selectedSplittersMap[user] =
+                                          value ?? false;
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 15),
+
+                          // Amount field
+                          Text(
+                            'Amount:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          TextField(
+                            controller: amountController,
+                            cursorColor: Colors.grey,
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Enter amount',
+                              border: OutlineInputBorder(),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.orange,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: Icon(Icons.attach_money),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 15),
-
-                  // Who paid dropdown
-                  Text('Who paid?', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 5),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(4),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.orange),
+                      ),
                     ),
-                    child: DropdownButton<String>(
-                      value: selectedPayer,
-                      isExpanded: true,
-                      underline: SizedBox(),
-                      onChanged: (String? value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedPayer = value;
-                          });
+                    ElevatedButton(
+                      onPressed: () {
+                        // Get list of selected users for splitting
+                        List<String> selectedSplitters =
+                            selectedSplittersMap.entries
+                                .where((entry) => entry.value)
+                                .map((entry) => entry.key)
+                                .toList();
+
+                        if (selectedPayer != null &&
+                            selectedSplitters.isNotEmpty &&
+                            amountController.text.isNotEmpty) {
+                          try {
+                            double amount = double.parse(amountController.text);
+
+                            // Create the transaction
+                            Transaction newTransaction = Transaction(
+                              payerId: selectedPayer!,
+                              splitBetween: List.from(selectedSplitters),
+                              amount: amount,
+                              description: descriptionController.text.trim(),
+                            );
+
+                            // The issue might be that we're using the StatefulBuilder's setState
+                            // Use the parent widget's setState to properly update the transactions list
+                            Navigator.pop(context);
+
+                            // Update state in the parent widget
+                            setState(() {
+                              transactions.add(newTransaction);
+                            });
+
+                            // Show success message with calculated split
+                            double perPersonAmount =
+                                amount / selectedSplitters.length;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Transaction recorded: ${selectedPayer} paid \$${amount.toStringAsFixed(2)}. ' +
+                                      'Each person owes \$${perPersonAmount.toStringAsFixed(2)}',
+                                ),
+                                duration: Duration(seconds: 4),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please enter a valid amount'),
+                              ),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Please fill all required fields'),
+                            ),
+                          );
                         }
                       },
-                      items: userNames.map<DropdownMenuItem<String>>((String user) {
-                        return DropdownMenuItem<String>(
-                          value: user,
-                          child: Text(user),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  SizedBox(height: 15),
-
-                  // Who should split
-                  Text('Split between:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 5),
-                  Container(
-                    height: 100,  // Fixed height for better visibility
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: ListView.builder(
-                      shrinkWrap: true,  // Added to ensure proper sizing inside scroll view
-                      itemCount: userNames.length,
-                      itemBuilder: (context, index) {
-                        final user = userNames[index];
-                        final isSelected = selectedSplittersMap[user] ?? false;
-
-                        return CheckboxListTile(
-                          title: Text(user),
-                          value: isSelected,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              selectedSplittersMap[user] = value ?? false;
-                            });
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 15),
-
-                  // Amount field
-                  Text('Amount:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 5),
-                  TextField(
-                    controller: amountController,
-                    cursorColor: Colors.grey,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      hintText: 'Enter amount',
-                      border: OutlineInputBorder(),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(color: Colors.orange),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.orange, width: 2),
-                      ),
-                      prefixIcon: Icon(Icons.attach_money),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel', style: TextStyle(color: Colors.orange)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Get list of selected users for splitting
-                List<String> selectedSplitters = selectedSplittersMap.entries
-                    .where((entry) => entry.value)
-                    .map((entry) => entry.key)
-                    .toList();
-
-                if (selectedPayer != null &&
-                    selectedSplitters.isNotEmpty &&
-                    amountController.text.isNotEmpty) {
-                  try {
-                    double amount = double.parse(amountController.text);
-
-                    // Create the transaction
-                    Transaction newTransaction = Transaction(
-                      payerId: selectedPayer!,
-                      splitBetween: List.from(selectedSplitters),
-                      amount: amount,
-                      description: descriptionController.text.trim(),
-                    );
-
-                    // The issue might be that we're using the StatefulBuilder's setState
-                    // Use the parent widget's setState to properly update the transactions list
-                    Navigator.pop(context);
-
-                    // Update state in the parent widget
-                    setState(() {
-                      transactions.add(newTransaction);
-                    });
-
-                    // Show success message with calculated split
-                    double perPersonAmount = amount / selectedSplitters.length;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                            'Transaction recorded: ${selectedPayer} paid \$${amount.toStringAsFixed(2)}. ' +
-                                'Each person owes \$${perPersonAmount.toStringAsFixed(2)}'
-                        ),
-                        duration: Duration(seconds: 4),
-                      ),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Please enter a valid amount')),
-                    );
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please fill all required fields')),
-                  );
-                }
-              },
-              child: Text('Save', style: TextStyle(color: Colors.orange)),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -353,33 +401,38 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
   Widget _buildBalanceDetails(String userName, int userIndex) {
     // Calculate balances for this user
     Map<String, Map<String, double>> balances =
-    BalanceCalculator.calculateBalances(transactions, userNames);
+        BalanceCalculator.calculateBalances(transactions, userNames);
 
     // Filter transactions related to this user
-    List<Transaction> userTransactions = transactions.where((transaction) =>
-    transaction.payerId == userName || transaction.splitBetween.contains(userName)
-    ).toList();
+    List<Transaction> userTransactions =
+        transactions
+            .where(
+              (transaction) =>
+                  transaction.payerId == userName ||
+                  transaction.splitBetween.contains(userName),
+            )
+            .toList();
 
     // Debug - print total transaction count
-    print("Building details for $userName with ${transactions.length} total transactions and ${userTransactions.length} user transactions");
+    print(
+      "Building details for $userName with ${transactions.length} total transactions and ${userTransactions.length} user transactions",
+    );
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(top: 10, bottom: 15),
           child: Text(
             "Balance Summary",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
 
         // User Owes Others - scrollable list
         Container(
-          height: 120, // Reduced height to give more space to transactions
+          height: 200, // Reduced height to give more space to transactions
           child: ListView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             itemCount: userNames.length,
             itemBuilder: (context, i) {
@@ -390,7 +443,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
               double theyOweAmount = balances[otherUser]?[userName] ?? 0;
 
               // Skip if there's no debt in either direction
-              if (youOweAmount == 0 && theyOweAmount == 0) return SizedBox.shrink();
+              if (youOweAmount == 0 && theyOweAmount == 0)
+                return SizedBox.shrink();
 
               // Determine the net relationship
               double netAmount;
@@ -422,7 +476,10 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                     children: [
                       CircleAvatar(
                         radius: 14,
-                        backgroundColor: youOwe ? Colors.red.shade100 : Colors.green.shade100,
+                        backgroundColor:
+                            youOwe
+                                ? Colors.red.shade100
+                                : Colors.green.shade100,
                         child: Icon(
                           youOwe ? Icons.arrow_upward : Icons.arrow_downward,
                           color: youOwe ? Colors.red : Colors.green,
@@ -431,19 +488,22 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                       ),
                       SizedBox(width: 8),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              youOwe
-                                  ? "You owe ${otherUser}"
-                                  : "${otherUser} owes you",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                        child: Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                youOwe
+                                    ? "You owe ${otherUser}"
+                                    : "${otherUser} owes you",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       Text(
@@ -463,86 +523,102 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
         ),
 
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(bottom: 15),
           child: Text(
             "Transaction History",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
 
         // Transaction history section remains the same
         Expanded(
-          child: userTransactions.isEmpty
-              ? Center(
-            child: Text(
-              "No transactions yet",
-              style: TextStyle(color: Colors.grey),
-            ),
-          )
-              : ListView.builder(
-            shrinkWrap: true,
-            itemCount: userTransactions.length,
-            itemBuilder: (context, i) {
-              // Debug - print transaction index being built
-              print("Building transaction $i of ${userTransactions.length}");
-
-              Transaction transaction = userTransactions[i];
-              bool isPayer = transaction.payerId == userName;
-              bool isRecipient = transaction.splitBetween.contains(userName);
-
-              // Debug information
-              print("Transaction $i: isPayer=$isPayer, isRecipient=$isRecipient");
-
-              return Card(
-                margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                elevation: 2,
-                child: ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  leading: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: isPayer ? Colors.blue.shade100 : Colors.amber.shade100,
-                    child: Icon(
-                      isPayer ? Icons.payments : Icons.account_balance_wallet,
-                      color: isPayer ? Colors.blue : Colors.amber,
-                      size: 14,
+          child:
+              userTransactions.isEmpty
+                  ? Center(
+                    child: Text(
+                      "No transactions yet",
+                      style: TextStyle(color: Colors.grey),
                     ),
+                  )
+                  : ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: userTransactions.length,
+                    itemBuilder: (context, i) {
+                      // Debug - print transaction index being built
+                      print(
+                        "Building transaction $i of ${userTransactions.length}",
+                      );
+
+                      Transaction transaction = userTransactions[i];
+                      bool isPayer = transaction.payerId == userName;
+                      bool isRecipient = transaction.splitBetween.contains(
+                        userName,
+                      );
+
+                      // Debug information
+                      print(
+                        "Transaction $i: isPayer=$isPayer, isRecipient=$isRecipient",
+                      );
+
+                      return Card(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        elevation: 2,
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          leading: Container(
+                            width:
+                                25, // Same as CircleAvatar's diameter (radius * 2)
+                            height: 25,
+                            padding: EdgeInsets.symmetric(horizontal: 3),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              isPayer
+                                  ? Icons.payment
+                                  : Icons.account_balance_wallet_outlined,
+                              size: 30,
+                              color: isPayer ? Colors.blue : Colors.amber,
+                            ),
+                          ),
+                          title: Text(
+                            isPayer
+                                ? "You paid \$${transaction.amount.toStringAsFixed(2)}"
+                                : "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}",
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          subtitle: Text(
+                            "Split: ${transaction.splitBetween.join(', ')}",
+                            style: TextStyle(fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Text(
+                            "${transaction.dateTime.day}/${transaction.dateTime.month}/${transaction.dateTime.year}",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  title: Text(
-                    isPayer
-                        ? "You paid \$${transaction.amount.toStringAsFixed(2)}"
-                        : "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  subtitle: Text(
-                    "Split: ${transaction.splitBetween.join(', ')}",
-                    style: TextStyle(fontSize: 10),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Text(
-                    "${transaction.dateTime.day}/${transaction.dateTime.month}/${transaction.dateTime.year}",
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
         ),
       ],
     );
   }
 
-// Function to build the main card content with balance summary
+  // Function to build the main card content with balance summary
   Widget _buildUserCardContent(String userName, int index) {
     // Calculate balances for this user
     Map<String, Map<String, double>> balances =
-    BalanceCalculator.calculateBalances(transactions, userNames);
+        BalanceCalculator.calculateBalances(transactions, userNames);
 
     // For debugging
     print("Building main card for $userName with balances: $balances");
@@ -555,7 +631,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
     for (var otherUser in userNames) {
       if (otherUser != userName) {
         // Check what this user owes to others
-        if (balances.containsKey(userName) && balances[userName]!.containsKey(otherUser)) {
+        if (balances.containsKey(userName) &&
+            balances[userName]!.containsKey(otherUser)) {
           double amount = balances[userName]![otherUser] ?? 0;
           if (amount > 0) {
             totalOwed += amount;
@@ -564,7 +641,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
         }
 
         // Check what others owe to this user
-        if (balances.containsKey(otherUser) && balances[otherUser]!.containsKey(userName)) {
+        if (balances.containsKey(otherUser) &&
+            balances[otherUser]!.containsKey(userName)) {
           double amount = balances[otherUser]![userName] ?? 0;
           if (amount > 0) {
             totalOwing += amount;
@@ -578,201 +656,233 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
     double netBalance = totalOwed - totalOwing;
     bool isNetPositive = netBalance > 0;
 
-    print("$userName - Total owed: $totalOwed, Total owing: $totalOwing, Net: $netBalance");
+    print(
+      "$userName - Total owed: $totalOwed, Total owing: $totalOwing, Net: $netBalance",
+    );
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // User name
-        Text(
-          userName,
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: 20),
-
-        // Balance summary section
-        if (transactions.isNotEmpty) ...[
-          // Overall balance indicator
-          Container(
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isNetPositive ? Colors.red.shade50 : Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isNetPositive ? Colors.red.shade200 : Colors.green.shade200,
-                width: 1.5,
-              ),
-            ),
-            child: Column(
+        Padding(
+          padding: EdgeInsets.only(top: 5, bottom: 0),
+          child: SizedBox(
+            height:
+                MediaQuery.of(context).size.height *
+                0.15, // 20% of screen height
+            child: Stack(
               children: [
-                Text(
-                  isNetPositive
-                      ? "Overall: You owe"
-                      : "Overall: You are owed",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: isNetPositive ? Colors.red : Colors.green,
+                Positioned(
+                  top: 2,
+                  left: 2,
+                  child: Text(
+                    userName,
+                    style: GoogleFonts.getFont(
+                      "Oswald",
+                      fontSize: 50,
+                      color: Colors.white,
+                      textStyle: TextStyle(letterSpacing: 2),
+                    ),
                   ),
                 ),
-                SizedBox(height: 5),
                 Text(
-                  "\$${netBalance.abs().toStringAsFixed(2)}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    color: isNetPositive ? Colors.red : Colors.green,
+                  userName,
+                  style: GoogleFonts.getFont(
+                    "Oswald",
+                    fontSize: 50,
+                    color: Color.fromARGB(255, 66, 66, 66),
+                    textStyle: TextStyle(letterSpacing: 2),
                   ),
                 ),
               ],
             ),
           ),
+        ),
 
-          SizedBox(height: 20),
-
-          // Detailed balances
-          Container(
-            height: 200,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: userNames.length,
-              itemBuilder: (context, i) {
-                if (i == index) return SizedBox.shrink(); // Skip self
-
-                String otherUser = userNames[i];
-
-                // Check if this user owes the other user
-                double youOweAmount = 0;
-                if (balances.containsKey(userName) && balances[userName]!.containsKey(otherUser)) {
-                  youOweAmount = balances[userName]![otherUser] ?? 0;
-                }
-
-                // Check if the other user owes this user
-                double theyOweAmount = 0;
-                if (balances.containsKey(otherUser) && balances[otherUser]!.containsKey(userName)) {
-                  theyOweAmount = balances[otherUser]![userName] ?? 0;
-                }
-
-                print("Card check: $userName to $otherUser: youOwe=$youOweAmount, theyOwe=$theyOweAmount");
-
-                // Skip if there's no debt in either direction
-                if (youOweAmount == 0 && theyOweAmount == 0) {
-                  print("No debt between $userName and $otherUser");
-                  return SizedBox.shrink();
-                }
-
-                // Determine the net relationship
-                double netAmount;
-                bool youOwe;
-
-                if (youOweAmount > 0) {
-                  netAmount = youOweAmount;
-                  youOwe = true;
-                  print("$userName owes $otherUser $netAmount");
-                } else if (theyOweAmount > 0) {
-                  netAmount = theyOweAmount;
-                  youOwe = false;
-                  print("$otherUser owes $userName $netAmount");
-                } else {
-                  print("No debt to display between $userName and $otherUser");
-                  return SizedBox.shrink(); // No debt
-                }
-
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(
-                      color: youOwe ? Colors.red.shade300 : Colors.green.shade300,
-                      width: 1.0,
+        // Balance summary section
+        SizedBox(
+          child: Column(
+            children: [
+              if (transactions.isNotEmpty) ...[
+                // Overall balance indicator
+                Container(
+                  padding: EdgeInsets.all(10),
+                  width: 280,
+                  decoration: BoxDecoration(
+                    color:
+                        isNetPositive
+                            ? Colors.red.shade50
+                            : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color:
+                          isNetPositive
+                              ? Colors.red.shade200
+                              : Colors.green.shade200,
+                      width: 1.5,
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundColor: youOwe ? Colors.red.shade100 : Colors.green.shade100,
-                          child: Icon(
-                            youOwe ? Icons.arrow_upward : Icons.arrow_downward,
-                            color: youOwe ? Colors.red : Colors.green,
-                            size: 14,
+                  child: Column(
+                    children: [
+                      Text(
+                        isNetPositive
+                            ? "Overall: You owe"
+                            : "Overall: You are owed",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: isNetPositive ? Colors.red : Colors.green,
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        "\$${netBalance.abs().toStringAsFixed(2)}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          color: isNetPositive ? Colors.red : Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Detailed balances
+                Container(
+                  height: 200,
+                  padding: EdgeInsets.only(left: 16, right: 16),
+                  width: 330,
+                  child: ListView.builder(
+                    padding: EdgeInsets.only(top: 20),
+                    shrinkWrap: true,
+                    itemCount: userNames.length,
+                    itemBuilder: (context, i) {
+                      if (i == index) return SizedBox.shrink(); // Skip self
+
+                      String otherUser = userNames[i];
+                      double youOweAmount = 0;
+                      if (balances.containsKey(userName) &&
+                          balances[userName]!.containsKey(otherUser)) {
+                        youOweAmount = balances[userName]![otherUser] ?? 0;
+                      }
+
+                      double theyOweAmount = 0;
+                      if (balances.containsKey(otherUser) &&
+                          balances[otherUser]!.containsKey(userName)) {
+                        theyOweAmount = balances[otherUser]![userName] ?? 0;
+                      }
+
+                      if (youOweAmount == 0 && theyOweAmount == 0) {
+                        return SizedBox.shrink();
+                      }
+
+                      double netAmount;
+                      bool youOwe;
+
+                      if (youOweAmount > 0) {
+                        netAmount = youOweAmount;
+                        youOwe = true;
+                      } else if (theyOweAmount > 0) {
+                        netAmount = theyOweAmount;
+                        youOwe = false;
+                      } else {
+                        return SizedBox.shrink();
+                      }
+
+                      return Card(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(
+                            color:
+                                youOwe
+                                    ? Colors.red.shade300
+                                    : Colors.green.shade300,
+                            width: 1.0,
                           ),
                         ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
                             children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundColor:
+                                    youOwe
+                                        ? Colors.red.shade100
+                                        : Colors.green.shade100,
+                                child: Icon(
+                                  youOwe
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward,
+                                  color: youOwe ? Colors.red : Colors.green,
+                                  size: 14,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      youOwe
+                                          ? "You owe ${otherUser}"
+                                          : "${otherUser} owes you",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               Text(
-                                youOwe
-                                    ? "You owe ${otherUser}"
-                                    : "${otherUser} owes you",
+                                "\$${netAmount.abs().toStringAsFixed(2)}",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 16,
+                                  color: youOwe ? Colors.red : Colors.green,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Text(
-                          "\$${netAmount.abs().toStringAsFixed(2)}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: youOwe ? Colors.red : Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ),
-        ] else ...[
-          // No transactions yet
-          Icon(
-            Icons.account_balance_wallet_outlined,
-            size: 60,
-            color: Colors.grey[400],
-          ),
-          SizedBox(height: 12),
-          Text(
-            "No transactions yet",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
+                ),
+              ] else ...[
+                SizedBox(height: 20),
+                Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 60,
+                  color: Colors.grey[400],
+                ),
+                SizedBox(height: 80),
+                Text(
+                  "No transactions yet",
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+              ],
 
-        SizedBox(height: 20),
-
-        // Tap to expand hint
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.touch_app,
-              color: Colors.grey[600],
-              size: 20,
-            ),
-            SizedBox(width: 4),
-            Text(
-              "Tap to see details",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
+              // Tap to expand hint
+              SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.touch_app, color: Colors.grey[600], size: 20),
+                  SizedBox(width: 4),
+                  Text(
+                    "Tap to see details",
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -786,20 +896,93 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
           // Base content with title and PageView
           Column(
             children: [
-              SizedBox(height: 80), // Top spacing
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text("Users", style: TextStyle(fontSize: 28)),
+              Container(
+                height: 190,
+                width: 2000,
+                color: const Color.fromARGB(255, 72, 71, 71),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 30),
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: Container(
+                          height: 100,
+                          width: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.amber,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(
+                                  0.2,
+                                ), // shadow color
+                                spreadRadius: 2, // how wide the shadow spreads
+                                blurRadius: 10, // how soft the shadow is
+                                offset: Offset(0, 4), // position (x, y)
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.group,
+                              color: const Color.fromARGB(255, 255, 255, 255),
+                              size: 60,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 30, left: 30),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 2,
+                            left: 2,
+                            child: Text(
+                              "Users",
+                              style: GoogleFonts.getFont(
+                                "Oswald",
+                                fontSize: 50,
+                                color: Colors.amber,
+                                textStyle: TextStyle(
+                                  letterSpacing: 2,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(2, 2), // X, Y position
+                                      blurRadius: 4.0, // Softness of shadow
+                                      color: Colors.black45,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            "Users",
+                            style: GoogleFonts.getFont(
+                              "Oswald",
+                              fontSize: 50,
+                              color: const Color.fromARGB(255, 255, 255, 255),
+                              textStyle: TextStyle(letterSpacing: 2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: 10),
+              Container(width: 1000, height: 4, color: Colors.amber),
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
                   // Disable scrolling when a card is expanded
                   physics:
-                  expandedCardIndex != -1
-                      ? NeverScrollableScrollPhysics()
-                      : AlwaysScrollableScrollPhysics(),
+                      expandedCardIndex != -1
+                          ? NeverScrollableScrollPhysics()
+                          : AlwaysScrollableScrollPhysics(),
                   itemCount: cardCount + 1,
                   itemBuilder: (context, index) {
                     if (index == cardCount) {
@@ -810,7 +993,6 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                             _showNameInputDialog(context);
                           },
                           child: Card(
-                            color: Colors.green[100],
                             elevation: 4,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -819,9 +1001,182 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                               width: 350,
                               height: 400,
                               alignment: Alignment.center,
-                              child: Text(
-                                "➕ Add A Friend",
-                                style: TextStyle(fontSize: 28),
+                              child: Stack(
+                                children: [
+                                  Column(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Container(
+                                          width: 350,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(16),
+                                              topRight: Radius.circular(16),
+                                            ),
+                                            color: Colors.amber,
+                                          ),
+                                          child: Center(
+                                            child: Stack(
+                                              children: [
+                                                Positioned(
+                                                  top: 2,
+                                                  left: 2,
+                                                  child: Text(
+                                                    "Tap To",
+                                                    style: GoogleFonts.getFont(
+                                                      "Oswald",
+                                                      fontSize: 50,
+                                                      color: Colors.amber,
+                                                      textStyle: TextStyle(
+                                                        letterSpacing: 2,
+                                                        shadows: [
+                                                          Shadow(
+                                                            offset: Offset(
+                                                              2,
+                                                              2,
+                                                            ), // X, Y position
+                                                            blurRadius:
+                                                                4.0, // Softness of shadow
+                                                            color:
+                                                                Colors.black45,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  "Tap To",
+                                                  style: GoogleFonts.getFont(
+                                                    "Oswald",
+                                                    fontSize: 50,
+                                                    color: const Color.fromARGB(
+                                                      255,
+                                                      255,
+                                                      255,
+                                                      255,
+                                                    ),
+                                                    textStyle: TextStyle(
+                                                      letterSpacing: 2,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Container(
+                                          width: 350,
+                                          color: Colors.white,
+                                          child: Center(
+                                            child: Stack(
+                                              children: [
+                                                Positioned(
+                                                  top: 2,
+                                                  left: 2,
+                                                  child: Text(
+                                                    "Add A",
+                                                    style: GoogleFonts.getFont(
+                                                      "Oswald",
+                                                      fontSize: 50,
+                                                      color:
+                                                          const Color.fromARGB(
+                                                            255,
+                                                            90,
+                                                            90,
+                                                            90,
+                                                          ),
+                                                      textStyle: TextStyle(
+                                                        letterSpacing: 2,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  "Add A",
+                                                  style: GoogleFonts.getFont(
+                                                    "Oswald",
+                                                    fontSize: 50,
+                                                    color: Colors.amber,
+                                                    textStyle: TextStyle(
+                                                      letterSpacing: 2,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Container(
+                                          width: 350,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(16),
+                                              bottomRight: Radius.circular(16),
+                                            ),
+                                            color: Colors.amber,
+                                          ),
+                                          child: Center(
+                                            child: Stack(
+                                              children: [
+                                                Positioned(
+                                                  top: 2,
+                                                  left: 2,
+                                                  child: Text(
+                                                    "New Friend",
+                                                    style: GoogleFonts.getFont(
+                                                      "Oswald",
+                                                      fontSize: 50,
+                                                      color: Colors.amber,
+                                                      textStyle: TextStyle(
+                                                        letterSpacing: 2,
+                                                        shadows: [
+                                                          Shadow(
+                                                            offset: Offset(
+                                                              2,
+                                                              2,
+                                                            ), // X, Y position
+                                                            blurRadius:
+                                                                4.0, // Softness of shadow
+                                                            color:
+                                                                Colors.black45,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  "New Friend",
+                                                  style: GoogleFonts.getFont(
+                                                    "Oswald",
+                                                    fontSize: 50,
+                                                    color: const Color.fromARGB(
+                                                      255,
+                                                      255,
+                                                      255,
+                                                      255,
+                                                    ),
+                                                    textStyle: TextStyle(
+                                                      letterSpacing: 2,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -845,31 +1200,87 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                           child: Container(
                             width: 350,
                             height: 500,
-                            padding: EdgeInsets.all(16),
                             alignment: Alignment.center,
-                            child: userNames.isNotEmpty && index < userNames.length
-                                ? _buildUserCardContent(userNames[index], index)
-                                : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Stack(
                               children: [
-                                Text(
-                                  "Page ${index + 1}",
-                                  style: TextStyle(fontSize: 32),
+                                Column(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Container(
+                                        width: 350,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(16),
+                                            topRight: Radius.circular(16),
+                                          ),
+                                          color: Colors.amber,
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Padding(
+                                            padding: EdgeInsets.only(left: 10),
+                                            child: Container(
+                                              width: 65,
+                                              height: 65,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.all(
+                                                  Radius.circular(16),
+                                                ),
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  255,
+                                                  174,
+                                                  0,
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                Icons.emoji_emotions_outlined,
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  255,
+                                                  255,
+                                                  255,
+                                                ),
+                                                size: 55,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(flex: 10, child: Container()),
+                                  ],
                                 ),
-                                SizedBox(height: 16),
-                                Icon(
-                                  Icons.touch_app,
-                                  color: Colors.grey[600],
-                                  size: 40,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  "Tap to expand",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
+                                userNames.isNotEmpty && index < userNames.length
+                                    ? _buildUserCardContent(
+                                      userNames[index],
+                                      index,
+                                    )
+                                    : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Page ${index + 1}",
+                                          style: TextStyle(fontSize: 32),
+                                        ),
+                                        SizedBox(height: 16),
+                                        Icon(
+                                          Icons.touch_app,
+                                          color: Colors.grey[600],
+                                          size: 40,
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          "Tap to expand",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                               ],
                             ),
                           ),
@@ -922,8 +1333,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                     // Header
                                     Text(
                                       userNames.isNotEmpty &&
-                                          expandedCardIndex <
-                                              userNames.length
+                                              expandedCardIndex <
+                                                  userNames.length
                                           ? userNames[expandedCardIndex]
                                           : "Page ${expandedCardIndex + 1}",
                                       style: TextStyle(
@@ -936,9 +1347,19 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
 
                                     // Content area - Show balance details directly
                                     Expanded(
-                                      child: userNames.isNotEmpty && expandedCardIndex < userNames.length
-                                          ? _buildBalanceDetails(userNames[expandedCardIndex], expandedCardIndex)
-                                          : Center(child: Text("No data available")),
+                                      child:
+                                          userNames.isNotEmpty &&
+                                                  expandedCardIndex <
+                                                      userNames.length
+                                              ? _buildBalanceDetails(
+                                                userNames[expandedCardIndex],
+                                                expandedCardIndex,
+                                              )
+                                              : Center(
+                                                child: Text(
+                                                  "No data available",
+                                                ),
+                                              ),
                                     ),
 
                                     // Footer hint
@@ -970,7 +1391,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
       // Add Floating Action Button for recording transactions
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showTransactionDialog(context),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.amber,
         child: Icon(Icons.add_card, color: Colors.white),
         tooltip: 'Record Transaction',
       ),
