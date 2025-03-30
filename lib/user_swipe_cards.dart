@@ -1014,7 +1014,12 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                               topLeft: Radius.circular(16),
                                               topRight: Radius.circular(16),
                                             ),
-                                            color: Colors.amber,
+                                            color: const Color.fromARGB(
+                                              255,
+                                              255,
+                                              255,
+                                              255,
+                                            ),
                                           ),
                                           child: Center(
                                             child: Stack(
@@ -1023,11 +1028,17 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                                   top: 2,
                                                   left: 2,
                                                   child: Text(
-                                                    "Tap To",
+                                                    "Tap",
                                                     style: GoogleFonts.getFont(
                                                       "Oswald",
                                                       fontSize: 50,
-                                                      color: Colors.amber,
+                                                      color:
+                                                          const Color.fromARGB(
+                                                            255,
+                                                            255,
+                                                            255,
+                                                            255,
+                                                          ),
                                                       textStyle: TextStyle(
                                                         letterSpacing: 2,
                                                         shadows: [
@@ -1047,57 +1058,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                                   ),
                                                 ),
                                                 Text(
-                                                  "Tap To",
-                                                  style: GoogleFonts.getFont(
-                                                    "Oswald",
-                                                    fontSize: 50,
-                                                    color: const Color.fromARGB(
-                                                      255,
-                                                      255,
-                                                      255,
-                                                      255,
-                                                    ),
-                                                    textStyle: TextStyle(
-                                                      letterSpacing: 2,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Container(
-                                          width: 350,
-                                          color: Colors.white,
-                                          child: Center(
-                                            child: Stack(
-                                              children: [
-                                                Positioned(
-                                                  top: 2,
-                                                  left: 2,
-                                                  child: Text(
-                                                    "Add A",
-                                                    style: GoogleFonts.getFont(
-                                                      "Oswald",
-                                                      fontSize: 50,
-                                                      color:
-                                                          const Color.fromARGB(
-                                                            255,
-                                                            90,
-                                                            90,
-                                                            90,
-                                                          ),
-                                                      textStyle: TextStyle(
-                                                        letterSpacing: 2,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "Add A",
+                                                  "Tap",
                                                   style: GoogleFonts.getFont(
                                                     "Oswald",
                                                     fontSize: 50,
@@ -1130,7 +1091,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                                   top: 2,
                                                   left: 2,
                                                   child: Text(
-                                                    "New Friend",
+                                                    "Here",
                                                     style: GoogleFonts.getFont(
                                                       "Oswald",
                                                       fontSize: 50,
@@ -1154,7 +1115,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                                   ),
                                                 ),
                                                 Text(
-                                                  "New Friend",
+                                                  "Here",
                                                   style: GoogleFonts.getFont(
                                                     "Oswald",
                                                     fontSize: 50,
@@ -1175,6 +1136,32 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                         ),
                                       ),
                                     ],
+                                  ),
+                                  Center(
+                                    child: Container(
+                                      padding: EdgeInsets.zero,
+                                      width: 110,
+                                      height: 20,
+                                      color: const Color.fromARGB(
+                                        255,
+                                        71,
+                                        71,
+                                        71,
+                                      ),
+                                    ),
+                                  ),
+                                  Center(
+                                    child: Container(
+                                      padding: EdgeInsets.zero,
+                                      width: 20,
+                                      height: 110,
+                                      color: const Color.fromARGB(
+                                        255,
+                                        71,
+                                        71,
+                                        71,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
