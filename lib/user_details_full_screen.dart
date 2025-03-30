@@ -86,138 +86,86 @@ class _UserDetailsFullScreenState extends State<UserDetailsFullScreen> {
   }
 
   // Add dialog to delete user
+  // Add dialog to delete user
   void _showDeleteUserDialog(BuildContext context) {
-    bool deleteTransactions = false;
-
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Column(
-            children: [
-              SizedBox(height: 10),
-              Icon(Icons.person_remove, color: Colors.red, size: 40),
-              SizedBox(height: 10),
-              Text("Delete User"),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Are you sure you want to delete ${widget.userName}?",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              Row(
-                children: [
-                  Checkbox(
-                    value: deleteTransactions,
-                    activeColor: Colors.red,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        deleteTransactions = value ?? false;
-                      });
-                    },
-                  ),
-                  Expanded(
-                    child: Text(
-                      "Also delete all transactions involving this user",
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              Text(
-                "This action cannot be undone.",
-                style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+      builder: (context) => AlertDialog(
+        title: Column(
+          children: [
+            SizedBox(height: 10),
+            Icon(Icons.person_remove, color: Colors.red, size: 40),
+            SizedBox(height: 10),
+            Text("Delete User"),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Are you sure you want to delete ${widget.userName}?",
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              onPressed: () async {
-                // Get the current user index to be removed
-                final userIndex = widget.userNames.indexOf(widget.userName);
-
-                if (userIndex != -1) {
-                  // Create a copy of the userNames list without the deleted user
-                  final updatedUserNames = List<String>.from(widget.userNames);
-                  updatedUserNames.removeAt(userIndex);
-
-                  // Handle the transactions based on user choice
-                  List<Transaction> updatedTransactions = List<Transaction>.from(widget.transactions);
-
-                  if (deleteTransactions) {
-                    // Remove all transactions where this user is the payer or part of the split
-                    updatedTransactions = widget.transactions.where((transaction) =>
-                    transaction.payerId != widget.userName &&
-                        !transaction.splitBetween.contains(widget.userName)
-                    ).toList();
-                  } else {
-                    // Keep transactions but remove the user from any splitBetween lists
-                    updatedTransactions = widget.transactions.map((transaction) {
-                      if (transaction.payerId == widget.userName) {
-                        // For transactions where the deleted user is the payer,
-                        // we could either delete them or reassign them.
-                        // Here, we'll keep them but mark them specially
-                        return Transaction(
-                          payerId: "[Deleted User]",
-                          splitBetween: transaction.splitBetween
-                              .where((user) => user != widget.userName)
-                              .toList(),
-                          amount: transaction.amount,
-                          description: transaction.description,
-                          dateTime: transaction.dateTime,
-                        );
-                      } else {
-                        // For other transactions, just remove the user from splitBetween
-                        return Transaction(
-                          payerId: transaction.payerId,
-                          splitBetween: transaction.splitBetween
-                              .where((user) => user != widget.userName)
-                              .toList(),
-                          amount: transaction.amount,
-                          description: transaction.description,
-                          dateTime: transaction.dateTime,
-                        );
-                      }
-                    }).toList();
-                  }
-
-                  // Save the updated data
-                  await DataManager.saveUsers(updatedUserNames);
-                  await DataManager.saveTransactions(updatedTransactions);
-
-                  // Close both the dialog and the details screen
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context); // Return to main page
-
-                  // Show confirmation
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('User deleted${deleteTransactions ? ' along with their transactions' : ''}'),
-                        backgroundColor: Colors.red,
-                        duration: Duration(seconds: 3),
-                      )
-                  );
-                }
-              },
-              child: Text('Delete User', style: TextStyle(color: Colors.white)),
+            SizedBox(height: 10),
+            Text(
+              "All transactions paid by or split with this user will be deleted.",
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "This action cannot be undone.",
+              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 12),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () async {
+              // Get the current user index to be removed
+              final userIndex = widget.userNames.indexOf(widget.userName);
+
+              if (userIndex != -1) {
+                // Create a copy of the userNames list without the deleted user
+                final updatedUserNames = List<String>.from(widget.userNames);
+                updatedUserNames.removeAt(userIndex);
+
+                // Always remove all transactions where this user is the payer or part of the split
+                List<Transaction> updatedTransactions = widget.transactions.where((transaction) =>
+                transaction.payerId != widget.userName &&
+                    !transaction.splitBetween.contains(widget.userName)
+                ).toList();
+
+                // Save the updated data
+                await DataManager.saveUsers(updatedUserNames);
+                await DataManager.saveTransactions(updatedTransactions);
+
+                // Close both the dialog and the details screen
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Return to main page
+
+                // Show confirmation
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('User deleted along with their transactions'),
+                      backgroundColor: Colors.red,
+                      duration: Duration(seconds: 3),
+                    )
+                );
+              }
+            },
+            child: Text('Delete User', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
