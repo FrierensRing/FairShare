@@ -194,10 +194,22 @@ class UserDetailsFullScreen extends StatelessWidget {
                                 ? "You paid \$${transaction.amount.toStringAsFixed(2)}"
                                 : "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}",
                           ),
-                          subtitle: Text(
-                            "Split between: ${transaction.splitBetween.join(', ')}",
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Split between: ${transaction.splitBetween.join(', ')}",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (transaction.description.isNotEmpty)
+                                Text(
+                                  "Description: ${transaction.description}",
+                                  style: TextStyle(fontStyle: FontStyle.italic),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
                           ),
                           trailing: Text(
                             "${transaction.dateTime.day}/${transaction.dateTime.month}/${transaction.dateTime.year}",
@@ -206,6 +218,7 @@ class UserDetailsFullScreen extends StatelessWidget {
                               fontSize: 12,
                             ),
                           ),
+                          isThreeLine: transaction.description.isNotEmpty,
                         ),
                       );
                     },

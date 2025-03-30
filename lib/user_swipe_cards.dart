@@ -189,6 +189,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                 .min, // Allow container to size to content
                         children: [
                           // Description field
+                          // Description field with 15 character limit
                           Text(
                             'Description (optional):',
                             style: TextStyle(fontWeight: FontWeight.bold),
@@ -197,8 +198,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                           TextField(
                             controller: descriptionController,
                             cursorColor: Colors.grey,
+                            maxLength: 15, // Limiting to 15 characters
                             decoration: InputDecoration(
-                              hintText: 'E.g., Dinner, Movie tickets, etc.',
+                              hintText: 'E.g., Dinner, Movie...',
                               border: OutlineInputBorder(),
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.grey),
@@ -209,6 +211,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                                   width: 2,
                                 ),
                               ),
+                              counterText: '15 char max', // Custom counter text
                             ),
                           ),
                           SizedBox(height: 15),
@@ -573,8 +576,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                             vertical: 4,
                           ),
                           leading: Container(
-                            width:
-                                25, // Same as CircleAvatar's diameter (radius * 2)
+                            width: 25,
+                            // Same as CircleAvatar's diameter (radius * 2)
                             height: 25,
                             padding: EdgeInsets.symmetric(horizontal: 3),
                             alignment: Alignment.center,
@@ -588,27 +591,43 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                           ),
                           title: Text(
                             isPayer
-                                ? "You paid \$${transaction.amount.toStringAsFixed(2)}"
-                                : "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}",
+                                ? "You paid \$${transaction.amount
+                                .toStringAsFixed(2)}"
+                                : "${transaction.payerId} paid \$${transaction
+                                .amount.toStringAsFixed(2)}",
                             style: TextStyle(fontSize: 15),
                           ),
-                          subtitle: Text(
-                            "Split: ${transaction.splitBetween.join(', ')}",
-                            style: TextStyle(fontSize: 13),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Split: ${transaction.splitBetween.join(', ')}",
+                                style: TextStyle(fontSize: 13),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (transaction.description.isNotEmpty)
+                                Text(
+                                  "For: ${transaction.description}",
+                                  style: TextStyle(fontSize: 13,
+                                      fontStyle: FontStyle.italic),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
                           ),
                           trailing: Text(
-                            "${transaction.dateTime.day}/${transaction.dateTime.month}/${transaction.dateTime.year}",
+                            "${transaction.dateTime.day}/${transaction.dateTime
+                                .month}/${transaction.dateTime.year}",
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 10,
                             ),
                           ),
+                          isThreeLine: transaction.description.isNotEmpty,
                         ),
                       );
-                    },
-                  ),
+                    }),
         ),
       ],
     );
