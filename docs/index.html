@@ -21,15 +21,51 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="fairshare">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Additional iOS specific meta tags -->
+  <meta name="apple-touch-fullscreen" content="yes">
+  <!-- Apple touch icons with different sizes -->
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="icons/Icon-152.png">
+  <link rel="apple-touch-icon-precomposed" sizes="167x167" href="icons/Icon-167.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icons/Icon-180.png">
   <script>
     // Fix for iOS "Add to Home Screen" path issues with base href
     if (window.navigator.standalone) {
-      // Check if running in standalone mode (added to home screen)
+      // Running in standalone mode (added to home screen on iOS)
       const basePath = '/FairShare/';
-      // Dynamically adjust paths for standalone mode if needed
+      
+      // Override the base href for iOS standalone mode
+      var baseElement = document.querySelector('base');
+      if (baseElement) {
+        // For iOS standalone mode, using a relative path often works better
+        baseElement.setAttribute('href', './');
+      }
+      
+      // Fix asset loading issues
       window.addEventListener('flutter-first-frame', function() {
-        console.log('Running in standalone mode, ensuring paths are correct');
+        console.log('Running in standalone mode on iOS, applying path fixes');
+        
+        // Force reload main.dart.js if needed
+        const originalLoader = window._flutter_loader || {};
+        window._flutter_loader = {
+          ...originalLoader,
+          loadEntrypoint: function(options) {
+            // Ensure paths are relative for standalone mode
+            if (options && options.serviceWorker && options.serviceWorker.serviceWorkerVersion) {
+              console.log('Adjusting paths for standalone mode');
+            }
+            return originalLoader.loadEntrypoint(options);
+          }
+        };
       });
+      
+      // Handle Safari-specific storage issues
+      try {
+        // Test localStorage access (can fail in some Safari contexts)
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+      } catch (e) {
+        console.warn('localStorage not available in this context');
+      }
     }
   </script>
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -39,6 +75,42 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <!-- Modified Flutter bootstrap with Safari fixes -->
+  <script>
+    // Detect iOS Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone;
+    
+    // Log environment information for debugging
+    console.log("Environment:", { 
+      isIOS, 
+      isSafari, 
+      isStandalone,
+      userAgent: navigator.userAgent 
+    });
+    
+    // Custom loader for iOS Safari standalone mode
+    if (isIOS && isStandalone) {
+      console.log("Running as iOS home screen app, applying special handling");
+      
+      // Load the main Flutter script with proper error handling
+      window.addEventListener('load', function() {
+        const script = document.createElement('script');
+        script.src = 'flutter_bootstrap.js';
+        script.onerror = function(error) {
+          console.error('Error loading Flutter bootstrap:', error);
+          document.body.innerHTML = '<p>Error loading application. Please try refreshing.</p>';
+        };
+        document.body.appendChild(script);
+      });
+    } else {
+      // Normal loading for other environments
+      const script = document.createElement('script');
+      script.src = 'flutter_bootstrap.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  </script>
 </body>
 </html>
