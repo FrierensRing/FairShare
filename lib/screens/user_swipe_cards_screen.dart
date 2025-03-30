@@ -24,6 +24,7 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
   int expandedCardIndex = -1; // -1 means no card is expanded
   List<String> userNames = []; // Store user names
   List<Transaction> transactions = []; // Store transactions
+  int currentPageIndex = 0; // Track current page for arrow navigation
 
   // Controllers and animations
   late AnimationController _animationController;
@@ -35,7 +36,7 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
-    
+
     _pageController = PageController();
     _animationController = AnimationController(
       vsync: this,
@@ -45,6 +46,15 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
+
+    // Add listener to track current page
+    _pageController.addListener(() {
+      if (_pageController.page != null) {
+        setState(() {
+          currentPageIndex = _pageController.page!.round();
+        });
+      }
+    });
 
     // Load saved data
     _loadSavedData();
@@ -76,6 +86,25 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
     _animationController.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  // Navigation functions
+  void _navigateToPreviousCard() {
+    if (currentPageIndex > 0 && expandedCardIndex == -1) {
+      _pageController.previousPage(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _navigateToNextCard() {
+    if (currentPageIndex < cardCount && expandedCardIndex == -1) {
+      _pageController.nextPage(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   // Card expansion functions
@@ -127,10 +156,10 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
   // Handle transaction deletion
   Future<void> _handleDeleteTransaction(Transaction transaction, int index) async {
     bool confirmed = await DeleteConfirmationDialogs.showDeleteTransactionDialog(
-      context, 
-      transaction
+        context,
+        transaction
     );
-    
+
     if (confirmed) {
       setState(() {
         transactions.remove(transaction);
@@ -141,11 +170,11 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
 
       // Show confirmation
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Transaction deleted'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        )
+          SnackBar(
+            content: Text('Transaction deleted'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          )
       );
     }
   }
@@ -156,10 +185,10 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
 
     String userName = userNames[userIndex];
     bool confirmed = await DeleteConfirmationDialogs.showDeleteUserDialog(
-      context, 
-      userName
+        context,
+        userName
     );
-    
+
     if (confirmed) {
       // Create a copy of the userNames list without the deleted user
       final updatedUserNames = List<String>.from(userNames);
@@ -167,8 +196,8 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
 
       // Remove all transactions where this user is the payer or part of the split
       List<Transaction> updatedTransactions = transactions.where((transaction) =>
-        transaction.payerId != userName && 
-        !transaction.splitBetween.contains(userName)
+      transaction.payerId != userName &&
+          !transaction.splitBetween.contains(userName)
       ).toList();
 
       // Save the updated data
@@ -187,11 +216,11 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
 
       // Show confirmation
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('User deleted along with their transactions'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        )
+          SnackBar(
+            content: Text('User deleted along with their transactions'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          )
       );
     }
   }
@@ -200,8 +229,8 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
   Widget _buildExpandedCardContent(String userName, int index) {
     // Filter transactions related to this user
     List<Transaction> userTransactions = transactions.where((transaction) =>
-      transaction.payerId == userName || 
-      transaction.splitBetween.contains(userName)
+    transaction.payerId == userName ||
+        transaction.splitBetween.contains(userName)
     ).toList();
 
     return Column(
@@ -226,7 +255,7 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
-        
+
         // Balance summary content
         Container(
           height: 200,
@@ -505,27 +534,92 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
               ),
               Container(width: 1000, height: 4, color: Colors.amber),
               Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  // Disable scrolling when a card is expanded
-                  physics: expandedCardIndex != -1
-                    ? NeverScrollableScrollPhysics()
-                    : AlwaysScrollableScrollPhysics(),
-                  itemCount: cardCount + 1,
-                  itemBuilder: (context, index) {
-                    if (index == cardCount) {
-                      // "Add User" card
-                      return _buildAddUserCard();
-                    }
+                child: Stack(
+                  children: [
+                    // PageView for the cards
+                    PageView.builder(
+                      controller: _pageController,
+                      // Disable scrolling when a card is expanded
+                      physics: expandedCardIndex != -1
+                          ? NeverScrollableScrollPhysics()
+                          : AlwaysScrollableScrollPhysics(),
+                      itemCount: cardCount + 1,
+                      itemBuilder: (context, index) {
+                        if (index == cardCount) {
+                          // "Add User" card
+                          return _buildAddUserCard();
+                        }
 
-                    return UserCardWidget(
-                      userName: userNames[index],
-                      index: index,
-                      userNames: userNames,
-                      transactions: transactions,
-                      onTap: _expandCard,
-                    );
-                  },
+                        return UserCardWidget(
+                          userName: userNames[index],
+                          index: index,
+                          userNames: userNames,
+                          transactions: transactions,
+                          onTap: _expandCard,
+                        );
+                      },
+                    ),
+
+                    // Left arrow button
+                    if (expandedCardIndex == -1 && currentPageIndex > 0)
+                      Positioned(
+                        left: 10,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.8),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                              onPressed: _navigateToPreviousCard,
+                              iconSize: 26,
+                              padding: EdgeInsets.all(12),
+                              tooltip: 'Previous User',
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Right arrow button
+                    if (expandedCardIndex == -1 && currentPageIndex < cardCount)
+                      Positioned(
+                        right: 10,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.8),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: Icon(Icons.arrow_forward_ios, color: Colors.white),
+                              onPressed: _navigateToNextCard,
+                              iconSize: 26,
+                              padding: EdgeInsets.all(12),
+                              tooltip: 'Next User',
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -558,11 +652,11 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
                                 height: 600,
                                 padding: EdgeInsets.all(16),
                                 child: userNames.isNotEmpty && expandedCardIndex < userNames.length
-                                  ? _buildExpandedCardContent(
-                                      userNames[expandedCardIndex],
-                                      expandedCardIndex,
-                                    )
-                                  : Center(child: Text("No data available")),
+                                    ? _buildExpandedCardContent(
+                                  userNames[expandedCardIndex],
+                                  expandedCardIndex,
+                                )
+                                    : Center(child: Text("No data available")),
                               ),
                             ),
                           ),
