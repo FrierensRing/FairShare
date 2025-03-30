@@ -173,7 +173,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
           ),
           content: SingleChildScrollView(  // Changed to SingleChildScrollView to handle overflow
             child: Container(
-              width: MediaQuery.sizeOf(context).width,
+              width: MediaQuery.of(context).size.width,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,  // Allow container to size to content
@@ -232,7 +232,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                   Text('Split between:', style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 5),
                   Container(
-                    height: 100,  // Slightly increased height for better visibility
+                    height: 100,  // Fixed height for better visibility
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(4),
@@ -315,11 +315,9 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                     Navigator.pop(context);
 
                     // Update state in the parent widget
-                    this.setState(() {
+                    setState(() {
                       transactions.add(newTransaction);
                     });
-
-                    // Navigator.pop(context); - We already pop above
 
                     // Show success message with calculated split
                     double perPersonAmount = amount / selectedSplitters.length;
@@ -351,7 +349,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
     );
   }
 
-// Widget to build balance details section
+  // Modification for _buildBalanceDetails method in UserSwipeCards (for the expanded card)
   Widget _buildBalanceDetails(String userName, int userIndex) {
     // Calculate balances for this user
     Map<String, Map<String, double>> balances =
@@ -388,11 +386,25 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
               if (i == userIndex) return SizedBox.shrink(); // Skip self
 
               String otherUser = userNames[i];
-              double amount = balances[userName]?[otherUser] ?? 0;
-              bool isPositive = amount > 0;
+              double youOweAmount = balances[userName]?[otherUser] ?? 0;
+              double theyOweAmount = balances[otherUser]?[userName] ?? 0;
 
-              // Only show entries where there's a balance
-              if (amount == 0) return SizedBox.shrink();
+              // Skip if there's no debt in either direction
+              if (youOweAmount == 0 && theyOweAmount == 0) return SizedBox.shrink();
+
+              // Determine the net relationship
+              double netAmount;
+              bool youOwe;
+
+              if (youOweAmount > 0) {
+                netAmount = youOweAmount;
+                youOwe = true;
+              } else if (theyOweAmount > 0) {
+                netAmount = theyOweAmount;
+                youOwe = false;
+              } else {
+                return SizedBox.shrink(); // No debt
+              }
 
               return Card(
                 margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -400,7 +412,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(
-                    color: isPositive ? Colors.red.shade300 : Colors.green.shade300,
+                    color: youOwe ? Colors.red.shade300 : Colors.green.shade300,
                     width: 1.0,
                   ),
                 ),
@@ -410,10 +422,10 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                     children: [
                       CircleAvatar(
                         radius: 14,
-                        backgroundColor: isPositive ? Colors.red.shade100 : Colors.green.shade100,
+                        backgroundColor: youOwe ? Colors.red.shade100 : Colors.green.shade100,
                         child: Icon(
-                          isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                          color: isPositive ? Colors.red : Colors.green,
+                          youOwe ? Icons.arrow_upward : Icons.arrow_downward,
+                          color: youOwe ? Colors.red : Colors.green,
                           size: 14,
                         ),
                       ),
@@ -423,7 +435,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isPositive
+                              youOwe
                                   ? "You owe ${otherUser}"
                                   : "${otherUser} owes you",
                               style: TextStyle(
@@ -435,11 +447,11 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                         ),
                       ),
                       Text(
-                        "\$${amount.abs().toStringAsFixed(2)}",
+                        "\$${netAmount.abs().toStringAsFixed(2)}",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: isPositive ? Colors.red : Colors.green,
+                          color: youOwe ? Colors.red : Colors.green,
                         ),
                       ),
                     ],
@@ -461,8 +473,8 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
           ),
         ),
 
-        // Transaction history - scrollable list with INCREASED HEIGHT
-        Expanded( // Changed from Container with fixed height to Expanded
+        // Transaction history section remains the same
+        Expanded(
           child: userTransactions.isEmpty
               ? Center(
             child: Text(
@@ -526,6 +538,246 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
     );
   }
 
+// Function to build the main card content with balance summary
+  Widget _buildUserCardContent(String userName, int index) {
+    // Calculate balances for this user
+    Map<String, Map<String, double>> balances =
+    BalanceCalculator.calculateBalances(transactions, userNames);
+
+    // For debugging
+    print("Building main card for $userName with balances: $balances");
+
+    // Calculate total balances
+    double totalOwed = 0; // What this user owes others
+    double totalOwing = 0; // What others owe this user
+
+    // Loop through all users to check both directions of debt
+    for (var otherUser in userNames) {
+      if (otherUser != userName) {
+        // Check what this user owes to others
+        if (balances.containsKey(userName) && balances[userName]!.containsKey(otherUser)) {
+          double amount = balances[userName]![otherUser] ?? 0;
+          if (amount > 0) {
+            totalOwed += amount;
+            print("$userName owes $otherUser: $amount");
+          }
+        }
+
+        // Check what others owe to this user
+        if (balances.containsKey(otherUser) && balances[otherUser]!.containsKey(userName)) {
+          double amount = balances[otherUser]![userName] ?? 0;
+          if (amount > 0) {
+            totalOwing += amount;
+            print("$otherUser owes $userName: $amount");
+          }
+        }
+      }
+    }
+
+    // Calculate net balance (positive means user owes more than they're owed)
+    double netBalance = totalOwed - totalOwing;
+    bool isNetPositive = netBalance > 0;
+
+    print("$userName - Total owed: $totalOwed, Total owing: $totalOwing, Net: $netBalance");
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // User name
+        Text(
+          userName,
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 20),
+
+        // Balance summary section
+        if (transactions.isNotEmpty) ...[
+          // Overall balance indicator
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isNetPositive ? Colors.red.shade50 : Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isNetPositive ? Colors.red.shade200 : Colors.green.shade200,
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  isNetPositive
+                      ? "Overall: You owe"
+                      : "Overall: You are owed",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: isNetPositive ? Colors.red : Colors.green,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  "\$${netBalance.abs().toStringAsFixed(2)}",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: isNetPositive ? Colors.red : Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 20),
+
+          // Detailed balances
+          Container(
+            height: 200,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: userNames.length,
+              itemBuilder: (context, i) {
+                if (i == index) return SizedBox.shrink(); // Skip self
+
+                String otherUser = userNames[i];
+
+                // Check if this user owes the other user
+                double youOweAmount = 0;
+                if (balances.containsKey(userName) && balances[userName]!.containsKey(otherUser)) {
+                  youOweAmount = balances[userName]![otherUser] ?? 0;
+                }
+
+                // Check if the other user owes this user
+                double theyOweAmount = 0;
+                if (balances.containsKey(otherUser) && balances[otherUser]!.containsKey(userName)) {
+                  theyOweAmount = balances[otherUser]![userName] ?? 0;
+                }
+
+                print("Card check: $userName to $otherUser: youOwe=$youOweAmount, theyOwe=$theyOweAmount");
+
+                // Skip if there's no debt in either direction
+                if (youOweAmount == 0 && theyOweAmount == 0) {
+                  print("No debt between $userName and $otherUser");
+                  return SizedBox.shrink();
+                }
+
+                // Determine the net relationship
+                double netAmount;
+                bool youOwe;
+
+                if (youOweAmount > 0) {
+                  netAmount = youOweAmount;
+                  youOwe = true;
+                  print("$userName owes $otherUser $netAmount");
+                } else if (theyOweAmount > 0) {
+                  netAmount = theyOweAmount;
+                  youOwe = false;
+                  print("$otherUser owes $userName $netAmount");
+                } else {
+                  print("No debt to display between $userName and $otherUser");
+                  return SizedBox.shrink(); // No debt
+                }
+
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(
+                      color: youOwe ? Colors.red.shade300 : Colors.green.shade300,
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundColor: youOwe ? Colors.red.shade100 : Colors.green.shade100,
+                          child: Icon(
+                            youOwe ? Icons.arrow_upward : Icons.arrow_downward,
+                            color: youOwe ? Colors.red : Colors.green,
+                            size: 14,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                youOwe
+                                    ? "You owe ${otherUser}"
+                                    : "${otherUser} owes you",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          "\$${netAmount.abs().toStringAsFixed(2)}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: youOwe ? Colors.red : Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ] else ...[
+          // No transactions yet
+          Icon(
+            Icons.account_balance_wallet_outlined,
+            size: 60,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 12),
+          Text(
+            "No transactions yet",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+
+        SizedBox(height: 20),
+
+        // Tap to expand hint
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.touch_app,
+              color: Colors.grey[600],
+              size: 20,
+            ),
+            SizedBox(width: 4),
+            Text(
+              "Tap to see details",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -576,6 +828,7 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                         ),
                       );
                     }
+
                     return Center(
                       child: GestureDetector(
                         onTap: () {
@@ -592,15 +845,15 @@ class _UserSwipeCardsState extends State<UserSwipeCards>
                           child: Container(
                             width: 350,
                             height: 500,
+                            padding: EdgeInsets.all(16),
                             alignment: Alignment.center,
-                            child: Column(
+                            child: userNames.isNotEmpty && index < userNames.length
+                                ? _buildUserCardContent(userNames[index], index)
+                                : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  userNames.isNotEmpty &&
-                                      index < userNames.length
-                                      ? userNames[index]
-                                      : "Page ${index + 1}",
+                                  "Page ${index + 1}",
                                   style: TextStyle(fontSize: 32),
                                 ),
                                 SizedBox(height: 16),

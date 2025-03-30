@@ -61,11 +61,25 @@ class UserDetailsFullScreen extends StatelessWidget {
                       if (i == index) return SizedBox.shrink(); // Skip self
 
                       String otherUser = userNames[i];
-                      double amount = balances[userName]?[otherUser] ?? 0;
-                      bool isPositive = amount > 0;
+                      double youOweAmount = balances[userName]?[otherUser] ?? 0;
+                      double theyOweAmount = balances[otherUser]?[userName] ?? 0;
 
-                      // Only show entries where there's a balance
-                      if (amount == 0) return SizedBox.shrink();
+                      // Skip if there's no debt in either direction
+                      if (youOweAmount == 0 && theyOweAmount == 0) return SizedBox.shrink();
+
+                      // Determine the net relationship
+                      double netAmount;
+                      bool youOwe;
+
+                      if (youOweAmount > 0) {
+                        netAmount = youOweAmount;
+                        youOwe = true;
+                      } else if (theyOweAmount > 0) {
+                        netAmount = theyOweAmount;
+                        youOwe = false;
+                      } else {
+                        return SizedBox.shrink(); // No debt
+                      }
 
                       return Card(
                         margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -73,7 +87,7 @@ class UserDetailsFullScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: isPositive ? Colors.red.shade300 : Colors.green.shade300,
+                            color: youOwe ? Colors.red.shade300 : Colors.green.shade300,
                             width: 1.5,
                           ),
                         ),
@@ -82,12 +96,12 @@ class UserDetailsFullScreen extends StatelessWidget {
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: isPositive ? Colors.red.shade100 : Colors.green.shade100,
+                                backgroundColor: youOwe ? Colors.red.shade100 : Colors.green.shade100,
                                 child: Icon(
-                                  isPositive
+                                  youOwe
                                       ? Icons.arrow_upward
                                       : Icons.arrow_downward,
-                                  color: isPositive ? Colors.red : Colors.green,
+                                  color: youOwe ? Colors.red : Colors.green,
                                 ),
                               ),
                               SizedBox(width: 16),
@@ -96,7 +110,7 @@ class UserDetailsFullScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      isPositive
+                                      youOwe
                                           ? "You owe ${otherUser}"
                                           : "${otherUser} owes you",
                                       style: TextStyle(
@@ -106,7 +120,7 @@ class UserDetailsFullScreen extends StatelessWidget {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      isPositive
+                                      youOwe
                                           ? "You need to pay ${otherUser}"
                                           : "You need to receive from ${otherUser}",
                                       style: TextStyle(
@@ -118,11 +132,11 @@ class UserDetailsFullScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                "\$${amount.abs().toStringAsFixed(2)}",
+                                "\$${netAmount.abs().toStringAsFixed(2)}",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
-                                  color: isPositive ? Colors.red : Colors.green,
+                                  color: youOwe ? Colors.red : Colors.green,
                                 ),
                               ),
                             ],
