@@ -13,6 +13,8 @@ import '../dialogs/add_transaction_dialog.dart';
 import '../dialogs/delete_confirmation_dialog.dart';
 
 class UserSwipeCardsScreen extends StatefulWidget {
+  const UserSwipeCardsScreen({super.key});
+
   @override
   _UserSwipeCardsScreenState createState() => _UserSwipeCardsScreenState();
 }
@@ -257,7 +259,7 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
         ),
 
         // Balance summary content
-        Container(
+        SizedBox(
           height: 200,
           child: BalanceSummaryWidget(
             userName: userName,
@@ -677,8 +679,8 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
           _handleTransactionAdded,
         ),
         backgroundColor: Colors.amber,
-        child: Icon(Icons.add_card, color: Colors.white),
         tooltip: 'Record Transaction',
+        child: Icon(Icons.add_card, color: Colors.white),
       ),
     );
   }

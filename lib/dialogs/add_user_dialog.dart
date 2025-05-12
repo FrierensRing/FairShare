@@ -5,9 +5,9 @@ class AddUserDialog extends StatelessWidget {
   final Function(String) onUserAdded;
 
   const AddUserDialog({
-    Key? key,
+    super.key,
     required this.onUserAdded,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class AddUserDialog extends StatelessWidget {
           ),
         ],
       ),
-      content: Container(
+      content: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: 200,
         child: TextField(

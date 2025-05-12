@@ -20,8 +20,7 @@ class DeleteConfirmationDialogs {
           ],
         ),
         content: Text(
-          "Are you sure you want to delete this transaction?\n\n" +
-          "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}" +
+          "Are you sure you want to delete this transaction?\n\n" "${transaction.payerId} paid \$${transaction.amount.toStringAsFixed(2)}" +
           (transaction.description.isNotEmpty ? " for ${transaction.description}" : "")
         ),
         actions: [
@@ -68,7 +67,7 @@ class DeleteConfirmationDialogs {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Are you sure you want to delete ${userName}?",
+              "Are you sure you want to delete $userName?",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),

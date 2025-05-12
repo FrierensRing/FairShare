@@ -12,13 +12,13 @@ class UserCardWidget extends StatelessWidget {
   final Function(int) onTap;
 
   const UserCardWidget({
-    Key? key,
+    super.key,
     required this.userName,
     required this.index,
     required this.userNames,
     required this.transactions,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -283,7 +283,7 @@ class UserCardWidget extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      youOwe ? "You owe ${otherUser}" : "${otherUser} owes you",
+                                      youOwe ? "You owe $otherUser" : "$otherUser owes you",
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
