@@ -10,12 +10,12 @@ class BalanceSummaryWidget extends StatelessWidget {
   final List<Transaction> transactions;
 
   const BalanceSummaryWidget({
-    Key? key,
+    super.key,
     required this.userName,
     required this.userIndex,
     required this.userNames,
     required this.transactions,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +35,9 @@ class BalanceSummaryWidget extends StatelessWidget {
         double theyOweAmount = balances[otherUser]?[userName] ?? 0;
 
         // Skip if there's no debt in either direction
-        if (youOweAmount == 0 && theyOweAmount == 0)
+        if (youOweAmount == 0 && theyOweAmount == 0) {
           return SizedBox.shrink();
+        }
 
         // Determine the net relationship
         double netAmount;
@@ -85,8 +86,8 @@ class BalanceSummaryWidget extends StatelessWidget {
                       children: [
                         Text(
                           youOwe
-                              ? "You owe ${otherUser}"
-                              : "${otherUser} owes you",
+                              ? "You owe $otherUser"
+                              : "$otherUser owes you",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,

@@ -8,10 +8,10 @@ class AddTransactionDialog extends StatefulWidget {
   final Function(Transaction) onTransactionAdded;
 
   const AddTransactionDialog({
-    Key? key,
+    super.key,
     required this.userNames,
     required this.onTransactionAdded,
-  }) : super(key: key);
+  });
 
   @override
   _AddTransactionDialogState createState() => _AddTransactionDialogState();
@@ -377,8 +377,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Transaction recorded: ${selectedPayer} paid \$${amount.toStringAsFixed(2)}. ' +
-                  'Each person owes \$${perPersonAmount.toStringAsFixed(2)}',
+              'Transaction recorded: $selectedPayer paid \$${amount.toStringAsFixed(2)}. ' 'Each person owes \$${perPersonAmount.toStringAsFixed(2)}',
             ),
             duration: Duration(seconds: 4),
           ),

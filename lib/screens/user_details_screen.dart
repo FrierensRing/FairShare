@@ -14,12 +14,12 @@ class UserDetailsScreen extends StatefulWidget {
   final List<Transaction> transactions;
 
   const UserDetailsScreen({
-    Key? key,
+    super.key,
     required this.index,
     required this.userName,
     required this.userNames,
     required this.transactions,
-  }) : super(key: key);
+  });
 
   @override
   _UserDetailsScreenState createState() => _UserDetailsScreenState();
