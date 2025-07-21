@@ -1,4 +1,5 @@
 // widgets/user_card_widget.dart - Widget for user card display
+import 'package:fairshare/models/glass_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/transaction.dart';
@@ -26,67 +27,66 @@ class UserCardWidget extends StatelessWidget {
       child: GestureDetector(
         onTap: () => onTap(index),
         child: Card(
+          color: Colors.transparent,
           elevation: 4,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(30),
           ),
-          child: Container(
-            width: 350,
-            height: 500,
-            alignment: Alignment.center,
-            child: Stack(
-              children: [
-                Column(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        width: 350,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
-                          ),
-                          color: Colors.amber,
-                        ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 10),
-                            child: Container(
-                              width: 65,
-                              height: 65,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(16),
+          child: GlassContainer(
+            child: Container(
+              width: 350,
+              height: 500,
+              alignment: Alignment.center,
+              child: Stack(
+                children: [
+                  Column(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: GlassContainer(
+                          color: const Color.fromARGB(255, 249, 194, 28),
+                          color2: Colors.amberAccent,
+                          fromGradient: 0.95,
+                          toGradient: 0.95,
+                          botLeft: 0,
+                          botRight: 0,
+                          child: Container(
+                            width: 350,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Container(
+                                  width: 65,
+                                  height: 65,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(16),
+                                    ),
+                                    color: const Color.fromARGB(255, 255, 174, 0),
+                                  ),
+                                  child: Icon(
+                                    Icons.emoji_emotions_outlined,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      255,
+                                      255,
+                                      255,
+                                    ),
+                                    size: 55,
+                                  ),
                                 ),
-                                color: const Color.fromARGB(
-                                  255,
-                                  255,
-                                  174,
-                                  0,
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.emoji_emotions_outlined,
-                                color: const Color.fromARGB(
-                                  255,
-                                  255,
-                                  255,
-                                  255,
-                                ),
-                                size: 55,
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(flex: 10, child: Container()),
-                  ],
-                ),
-                _buildUserCardContent(context),
-              ],
+                      Expanded(flex: 10, child: Container()),
+                    ],
+                  ),
+                  _buildUserCardContent(context),
+                ],
+              ),
             ),
           ),
         ),
@@ -136,7 +136,8 @@ class UserCardWidget extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(top: 5, bottom: 0),
           child: SizedBox(
-            height: 75, // Fixed height instead of percentage-based to ensure consistency
+            height:
+                75, // Fixed height instead of percentage-based to ensure consistency
             child: Stack(
               children: [
                 Positioned(
@@ -144,21 +145,19 @@ class UserCardWidget extends StatelessWidget {
                   left: 2,
                   child: Text(
                     userName,
-                    style: GoogleFonts.getFont(
-                      "Oswald",
+                    style: TextStyle(
                       fontSize: 50,
                       color: Colors.white,
-                      textStyle: TextStyle(letterSpacing: 2),
+                      letterSpacing: 2,
                     ),
                   ),
                 ),
                 Text(
                   userName,
-                  style: GoogleFonts.getFont(
-                    "Oswald",
+                  style: TextStyle(
                     fontSize: 50,
                     color: Color.fromARGB(255, 66, 66, 66),
-                    textStyle: TextStyle(letterSpacing: 2),
+                    letterSpacing: 2,
                   ),
                 ),
               ],
@@ -173,23 +172,31 @@ class UserCardWidget extends StatelessWidget {
               if (transactions.isNotEmpty) ...[
                 // Add more space between username and balance indicator
                 SizedBox(height: 30),
-                
+
                 // Overall balance indicator
                 Container(
                   padding: EdgeInsets.all(10),
                   width: 280,
                   decoration: BoxDecoration(
-                    color: isNetPositive ? Colors.red.shade50 : Colors.green.shade50,
+                    color:
+                        isNetPositive
+                            ? Colors.red.shade50
+                            : Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isNetPositive ? Colors.red.shade200 : Colors.green.shade200,
+                      color:
+                          isNetPositive
+                              ? Colors.red.shade200
+                              : Colors.green.shade200,
                       width: 1.5,
                     ),
                   ),
                   child: Column(
                     children: [
                       Text(
-                        isNetPositive ? "Overall: You owe" : "Overall: You are owed",
+                        isNetPositive
+                            ? "Overall: You owe"
+                            : "Overall: You are owed",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -260,7 +267,10 @@ class UserCardWidget extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                           side: BorderSide(
-                            color: youOwe ? Colors.red.shade300 : Colors.green.shade300,
+                            color:
+                                youOwe
+                                    ? Colors.red.shade300
+                                    : Colors.green.shade300,
                             width: 1.0,
                           ),
                         ),
@@ -270,9 +280,14 @@ class UserCardWidget extends StatelessWidget {
                             children: [
                               CircleAvatar(
                                 radius: 14,
-                                backgroundColor: youOwe ? Colors.red.shade100 : Colors.green.shade100,
+                                backgroundColor:
+                                    youOwe
+                                        ? Colors.red.shade100
+                                        : Colors.green.shade100,
                                 child: Icon(
-                                  youOwe ? Icons.arrow_upward : Icons.arrow_downward,
+                                  youOwe
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward,
                                   color: youOwe ? Colors.red : Colors.green,
                                   size: 14,
                                 ),
@@ -283,7 +298,9 @@ class UserCardWidget extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      youOwe ? "You owe ${otherUser}" : "${otherUser} owes you",
+                                      youOwe
+                                          ? "You owe ${otherUser}"
+                                          : "${otherUser} owes you",
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
@@ -308,16 +325,16 @@ class UserCardWidget extends StatelessWidget {
                   ),
                 ),
               ] else ...[
-                SizedBox(height: 20),
+                SizedBox(height: 50),
                 Icon(
                   Icons.account_balance_wallet_outlined,
                   size: 60,
-                  color: Colors.grey[400],
+                  color: Colors.white,
                 ),
-                SizedBox(height: 80),
+                SizedBox(height: 70),
                 Text(
                   "No transactions yet",
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ],
 
@@ -326,11 +343,11 @@ class UserCardWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.touch_app, color: Colors.grey[600], size: 20),
+                  Icon(Icons.touch_app, color: Colors.white, size: 20),
                   SizedBox(width: 4),
                   Text(
                     "Tap to see details",
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 14, color: Colors.white),
                   ),
                 ],
               ),

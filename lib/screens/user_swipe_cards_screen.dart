@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'user_details_screen.dart';
 import '../models/transaction.dart';
+import '../models/glass_panel.dart';
 import '../services/data_manager.dart';
 import '../widgets/user_card_widget.dart';
 import '../widgets/balance_summary_widget.dart';
@@ -34,8 +35,10 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-        overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+    );
 
     _pageController = PageController();
     _animationController = AnimationController(
@@ -154,11 +157,15 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
   }
 
   // Handle transaction deletion
-  Future<void> _handleDeleteTransaction(Transaction transaction, int index) async {
-    bool confirmed = await DeleteConfirmationDialogs.showDeleteTransactionDialog(
-        context,
-        transaction
-    );
+  Future<void> _handleDeleteTransaction(
+    Transaction transaction,
+    int index,
+  ) async {
+    bool confirmed =
+        await DeleteConfirmationDialogs.showDeleteTransactionDialog(
+          context,
+          transaction,
+        );
 
     if (confirmed) {
       setState(() {
@@ -170,11 +177,11 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
 
       // Show confirmation
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Transaction deleted'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          )
+        SnackBar(
+          content: Text('Transaction deleted'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
       );
     }
   }
@@ -185,8 +192,8 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
 
     String userName = userNames[userIndex];
     bool confirmed = await DeleteConfirmationDialogs.showDeleteUserDialog(
-        context,
-        userName
+      context,
+      userName,
     );
 
     if (confirmed) {
@@ -195,10 +202,14 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
       updatedUserNames.removeAt(userIndex);
 
       // Remove all transactions where this user is the payer or part of the split
-      List<Transaction> updatedTransactions = transactions.where((transaction) =>
-      transaction.payerId != userName &&
-          !transaction.splitBetween.contains(userName)
-      ).toList();
+      List<Transaction> updatedTransactions =
+          transactions
+              .where(
+                (transaction) =>
+                    transaction.payerId != userName &&
+                    !transaction.splitBetween.contains(userName),
+              )
+              .toList();
 
       // Save the updated data
       await DataManager.saveUsers(updatedUserNames);
@@ -216,11 +227,11 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
 
       // Show confirmation
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('User deleted along with their transactions'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          )
+        SnackBar(
+          content: Text('User deleted along with their transactions'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
       );
     }
   }
@@ -228,10 +239,14 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
   // Build the expanded card content
   Widget _buildExpandedCardContent(String userName, int index) {
     // Filter transactions related to this user
-    List<Transaction> userTransactions = transactions.where((transaction) =>
-    transaction.payerId == userName ||
-        transaction.splitBetween.contains(userName)
-    ).toList();
+    List<Transaction> userTransactions =
+        transactions
+            .where(
+              (transaction) =>
+                  transaction.payerId == userName ||
+                  transaction.splitBetween.contains(userName),
+            )
+            .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -239,23 +254,21 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
         // Header
         Text(
           userName,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold,
+          color: Colors.amberAccent),
         ),
         SizedBox(height: 8),
         Divider(),
-
+    
         // Balance summary section
         Padding(
           padding: const EdgeInsets.only(bottom: 15),
           child: Text(
             "Balance Summary",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
-
+    
         // Balance summary content
         Container(
           height: 200,
@@ -266,15 +279,15 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
             transactions: transactions,
           ),
         ),
-
+    
         Padding(
           padding: const EdgeInsets.only(bottom: 15),
           child: Text(
             "Transaction History",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
-
+    
         // Transaction history section
         Expanded(
           child: TransactionListWidget(
@@ -283,7 +296,7 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
             onDeleteTap: _handleDeleteTransaction,
           ),
         ),
-
+    
         // Delete user button
         SizedBox(height: 16),
         ElevatedButton.icon(
@@ -310,137 +323,36 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
           AddUserDialog.show(context, _handleUserAdded);
         },
         child: Card(
+          color: Colors.transparent,
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Container(
-            width: 350,
-            height: 400,
-            alignment: Alignment.center,
-            child: Stack(
-              children: [
-                Column(
+          child: GlassContainer(
+            child: Container(
+              width: 350,
+              height: 400,
+              alignment: Alignment.center,
+              child: Center(
+                child: Column(
                   children: [
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        width: 350,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
-                          ),
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                        ),
-                        child: Center(
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: 2,
-                                left: 2,
-                                child: Text(
-                                  "Add",
-                                  style: GoogleFonts.getFont(
-                                    "Oswald",
-                                    fontSize: 50,
-                                    color: const Color.fromARGB(255, 255, 255, 255),
-                                    textStyle: TextStyle(
-                                      letterSpacing: 2,
-                                      shadows: [
-                                        Shadow(
-                                          offset: Offset(2, 2),
-                                          blurRadius: 4.0,
-                                          color: Colors.black45,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                "Add",
-                                style: GoogleFonts.getFont(
-                                  "Oswald",
-                                  fontSize: 50,
-                                  color: Colors.amber,
-                                  textStyle: TextStyle(letterSpacing: 2),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    SizedBox(height: 90),
+                    Icon(
+                      Icons.touch_app,
+                      color: Colors.white.withOpacity(0.4),
+                      size: 90,
                     ),
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        width: 350,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(16),
-                            bottomRight: Radius.circular(16),
-                          ),
-                          color: Colors.amber,
-                        ),
-                        child: Center(
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: 2,
-                                left: 2,
-                                child: Text(
-                                  "User",
-                                  style: GoogleFonts.getFont(
-                                    "Oswald",
-                                    fontSize: 50,
-                                    color: Colors.amber,
-                                    textStyle: TextStyle(
-                                      letterSpacing: 2,
-                                      shadows: [
-                                        Shadow(
-                                          offset: Offset(2, 2),
-                                          blurRadius: 4.0,
-                                          color: Colors.black45,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                "User",
-                                style: GoogleFonts.getFont(
-                                  "Oswald",
-                                  fontSize: 50,
-                                  color: const Color.fromARGB(255, 255, 255, 255),
-                                  textStyle: TextStyle(letterSpacing: 2),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                    SizedBox(height: 70,),
+                    Text(
+                      "tap to add new users",
+                      style: TextStyle(
+                        color: Colors.white. withOpacity(0.7),
+                        fontSize: 20,
                       ),
-                    ),
+                    )
                   ],
                 ),
-                Center(
-                  child: Container(
-                    padding: EdgeInsets.zero,
-                    width: 110,
-                    height: 20,
-                    color: const Color.fromARGB(255, 71, 71, 71),
-                  ),
-                ),
-                Center(
-                  child: Container(
-                    padding: EdgeInsets.zero,
-                    width: 20,
-                    height: 110,
-                    color: const Color.fromARGB(255, 71, 71, 71),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -454,85 +366,59 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
       body: Stack(
         children: [
           // Base content with title and PageView
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF3A3A3F), Color(0xFF1A1A1D)],
+              ),
+            ),
+          ),
           Column(
             children: [
+              SizedBox(height: 80),
               Container(
-                height: 190,
+                height: 130,
                 width: 2000,
-                color: const Color.fromARGB(255, 72, 71, 71),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 30),
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 40),
-                        child: Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.amber,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 10,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.group,
-                              color: const Color.fromARGB(255, 255, 255, 255),
-                              size: 60,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 30, left: 30),
-                      child: Stack(
+                color: Colors.transparent,
+                child: Center(
+                  child: GlassContainer(
+                    borderSize: 0.1,
+                    child: Container(
+                      height: 100,
+                      width: 300,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Positioned(
-                            top: 2,
-                            left: 2,
-                            child: Text(
-                              "Users",
-                              style: GoogleFonts.getFont(
-                                "Oswald",
-                                fontSize: 50,
-                                color: Colors.amber,
-                                textStyle: TextStyle(
-                                  letterSpacing: 2,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(2, 2),
-                                      blurRadius: 4.0,
-                                      color: Colors.black45,
-                                    ),
-                                  ],
-                                ),
+                          SizedBox(width: 5),
+                          Container(
+                            width: 90,
+                            height: 90,
+                            child: GlassContainer(
+                              borderRadius: 25,
+                              borderSize: 0,
+                              color: Colors.black,
+                              child: Icon(
+                                Icons.group,
+                                color: const Color.fromARGB(255, 255, 255, 255),
+                                size: 60,
                               ),
                             ),
                           ),
+                          Spacer(),
                           Text(
                             "Users",
-                            style: GoogleFonts.getFont(
-                              "Oswald",
-                              fontSize: 50,
-                              color: const Color.fromARGB(255, 255, 255, 255),
-                              textStyle: TextStyle(letterSpacing: 2),
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 40),
                           ),
+                          SizedBox(width: 40),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-              Container(width: 1000, height: 4, color: Colors.amber),
               Expanded(
                 child: Stack(
                   children: [
@@ -540,9 +426,10 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
                     PageView.builder(
                       controller: _pageController,
                       // Disable scrolling when a card is expanded
-                      physics: expandedCardIndex != -1
-                          ? NeverScrollableScrollPhysics()
-                          : AlwaysScrollableScrollPhysics(),
+                      physics:
+                          expandedCardIndex != -1
+                              ? NeverScrollableScrollPhysics()
+                              : AlwaysScrollableScrollPhysics(),
                       itemCount: cardCount + 1,
                       itemBuilder: (context, index) {
                         if (index == cardCount) {
@@ -580,7 +467,10 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
                               ],
                             ),
                             child: IconButton(
-                              icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                              icon: Icon(
+                                Icons.arrow_back_ios_new,
+                                color: Colors.white,
+                              ),
                               onPressed: _navigateToPreviousCard,
                               iconSize: 26,
                               padding: EdgeInsets.all(12),
@@ -610,7 +500,10 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
                               ],
                             ),
                             child: IconButton(
-                              icon: Icon(Icons.arrow_forward_ios, color: Colors.white),
+                              icon: Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                              ),
                               onPressed: _navigateToNextCard,
                               iconSize: 26,
                               padding: EdgeInsets.all(12),
@@ -632,7 +525,9 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
               builder: (context, child) {
                 return Positioned.fill(
                   child: Material(
-                    color: Colors.black.withOpacity(0.5 * _animationController.value),
+                    color: Colors.black.withOpacity(
+                      0.5 * _animationController.value,
+                    ),
                     child: InkWell(
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
@@ -641,22 +536,30 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
                         child: Transform.scale(
                           scale: _scaleAnimation.value,
                           child: GestureDetector(
-                            onTap: () {}, // Prevent closing when tapping on the card
+                            onTap:
+                                () {}, // Prevent closing when tapping on the card
                             child: Card(
+                              color: Colors.transparent,
                               elevation: 12 * _animationController.value,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Container(
-                                width: 350,
-                                height: 600,
-                                padding: EdgeInsets.all(16),
-                                child: userNames.isNotEmpty && expandedCardIndex < userNames.length
-                                    ? _buildExpandedCardContent(
-                                  userNames[expandedCardIndex],
-                                  expandedCardIndex,
-                                )
-                                    : Center(child: Text("No data available")),
+                              child: GlassContainer(
+                                child: Container(
+                                  width: 350,
+                                  height: 600,
+                                  padding: EdgeInsets.all(16),
+                                  child:
+                                      userNames.isNotEmpty &&
+                                              expandedCardIndex < userNames.length
+                                          ? _buildExpandedCardContent(
+                                            userNames[expandedCardIndex],
+                                            expandedCardIndex,
+                                          )
+                                          : Center(
+                                            child: Text("No data available"),
+                                          ),
+                                ),
                               ),
                             ),
                           ),
@@ -671,11 +574,12 @@ class _UserSwipeCardsScreenState extends State<UserSwipeCardsScreen>
       ),
       // Add Floating Action Button for recording transactions
       floatingActionButton: FloatingActionButton(
-        onPressed: () => AddTransactionDialog.show(
-          context,
-          userNames,
-          _handleTransactionAdded,
-        ),
+        onPressed:
+            () => AddTransactionDialog.show(
+              context,
+              userNames,
+              _handleTransactionAdded,
+            ),
         backgroundColor: Colors.amber,
         child: Icon(Icons.add_card, color: Colors.white),
         tooltip: 'Record Transaction',
